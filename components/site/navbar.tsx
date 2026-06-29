@@ -3,6 +3,7 @@
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { Menu, X } from 'lucide-react'
+import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { Logo } from './logo'
 
@@ -57,8 +58,11 @@ export function Navbar() {
           >
             Sign in
           </Button>
-          <Button className="rounded-xl bg-foreground text-background hover:bg-foreground/90">
-            Start free
+          <Button
+            asChild
+            className="rounded-xl bg-foreground text-background hover:bg-foreground/90"
+          >
+            <Link href="/workspace">Start free</Link>
           </Button>
         </div>
 
@@ -87,8 +91,13 @@ export function Navbar() {
             ))}
             <div className="mt-2 flex flex-col gap-2 border-t border-border pt-3">
               <Button variant="ghost">Sign in</Button>
-              <Button className="bg-foreground text-background hover:bg-foreground/90">
-                Start free
+              <Button
+                asChild
+                className="bg-foreground text-background hover:bg-foreground/90"
+              >
+                <Link href="/workspace" onClick={() => setOpen(false)}>
+                  Start free
+                </Link>
               </Button>
             </div>
           </div>

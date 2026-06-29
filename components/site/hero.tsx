@@ -3,6 +3,7 @@
 import { Button } from '@/components/ui/button'
 import { motion, useMotionValue, useSpring, useTransform } from 'motion/react'
 import { ArrowRight, Sparkles, Star } from 'lucide-react'
+import Link from 'next/link'
 import type { PointerEvent } from 'react'
 import { AnalysisPreview } from './analysis-preview'
 
@@ -72,11 +73,14 @@ export function Hero() {
         className="mt-9 flex flex-col items-center gap-3 sm:flex-row"
       >
         <Button
+          asChild
           size="lg"
           className="group h-12 rounded-xl bg-foreground px-6 text-background hover:bg-foreground/90"
         >
-          Analyze your first candidate
-          <ArrowRight className="ml-1 size-4 transition-transform group-hover:translate-x-0.5" />
+          <Link href="/workspace">
+            Analyze your first candidate
+            <ArrowRight className="ml-1 size-4 transition-transform group-hover:translate-x-0.5" />
+          </Link>
         </Button>
         <Button
           size="lg"

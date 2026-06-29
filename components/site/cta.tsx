@@ -2,6 +2,7 @@
 
 import { Button } from '@/components/ui/button'
 import { ArrowRight } from 'lucide-react'
+import Link from 'next/link'
 import { Reveal } from './reveal'
 
 export function Cta() {
@@ -26,11 +27,14 @@ export function Cta() {
           </p>
           <div className="relative mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Button
+              asChild
               size="lg"
               className="group h-12 rounded-xl bg-foreground px-6 text-background hover:bg-foreground/90"
             >
-              Start free
-              <ArrowRight className="ml-1 size-4 transition-transform group-hover:translate-x-0.5" />
+              <Link href="/workspace">
+                Start free
+                <ArrowRight className="ml-1 size-4 transition-transform group-hover:translate-x-0.5" />
+              </Link>
             </Button>
             <Button
               size="lg"
