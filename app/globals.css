@@ -46,6 +46,8 @@
   --color-purple: var(--purple);
   --color-cyan: var(--cyan);
   --color-emerald: var(--emerald);
+  --color-amber: var(--amber);
+  --color-rose: var(--rose);
   --color-glass: var(--glass);
   --color-glass-border: var(--glass-border);
 
@@ -92,6 +94,8 @@
   --purple: oklch(0.62 0.23 300);
   --cyan: oklch(0.78 0.14 200);
   --emerald: oklch(0.72 0.16 162);
+  --amber: oklch(0.8 0.15 75);
+  --rose: oklch(0.66 0.2 18);
 
   --glass: oklch(1 0 0 / 8%);
   --glass-border: oklch(1 0 0 / 12%);
