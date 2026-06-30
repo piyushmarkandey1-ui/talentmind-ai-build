@@ -67,11 +67,16 @@ function Button({
       ? (children as React.ReactElement)
       : undefined
 
+  // When asChild is used with non-button elements (like Link), set nativeButton to false
+  // to avoid Base UI warnings about missing native button semantics
+  const isNativeButton = !asChild || (React.isValidElement(children) && children.type === 'button')
+
   return (
     <ButtonPrimitive
       data-slot="button"
       className={cn(buttonVariants({ variant, size, className }))}
       render={renderProp}
+      nativeButton={isNativeButton}
       {...props}
     >
       {asChild ? null : children}
