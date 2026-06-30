@@ -52,10 +52,16 @@ export function AuthModal({ open, onClose, onSuccess }: AuthModalProps) {
             email: data.user.email!,
             full_name: formData.fullName,
           })
-        }
 
-        onSuccess?.()
-        onClose()
+          // If session was created (email confirmation disabled), auto-login
+          if (data.session) {
+            onSuccess?.()
+            onClose()
+          } else {
+            // Email confirmation is enabled in Supabase
+            setError('Please check your email to confirm your account. Or disable email confirmation in Supabase dashboard for immediate access.')
+          }
+        }
       } else {
         const { error } = await supabase.auth.signInWithPassword({
           email: formData.email,
