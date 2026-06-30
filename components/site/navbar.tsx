@@ -53,12 +53,6 @@ export function Navbar() {
 
         <div className="hidden items-center gap-2 md:flex">
           <Button
-            variant="ghost"
-            className="text-muted-foreground hover:text-foreground"
-          >
-            Sign in
-          </Button>
-          <Button
             asChild
             className="rounded-xl bg-foreground text-background hover:bg-foreground/90"
           >
@@ -90,7 +84,6 @@ export function Navbar() {
               </a>
             ))}
             <div className="mt-2 flex flex-col gap-2 border-t border-border pt-3">
-              <Button variant="ghost">Sign in</Button>
               <Button
                 asChild
                 className="bg-foreground text-background hover:bg-foreground/90"
