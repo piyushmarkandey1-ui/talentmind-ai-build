@@ -142,17 +142,17 @@ lib/
 
 ---
 
-## What Judges Should See
+## 🚀 Try These to Test the App
 
-1. **Landing page** at [talentmind-ai-build.vercel.app](https://talentmind-ai-build.vercel.app) — toggle between Dark and Light themes using the ☀️/🌙 button in the navbar
+1. **Open the app** at [talentmind-ai-build.vercel.app](https://talentmind-ai-build.vercel.app) — toggle between Dark and Light themes using the ☀️/🌙 button in the navbar
 2. **Click "Start free"** → set up a recruiter profile (only name is required)
 3. **Paste a job description** or use one of the quick-start templates
 4. **Upload 2–3 resumes** (PDF or DOCX) — watch the live streaming evaluation
 5. **Explore the ranked shortlist** — click each candidate to see their full 11-dimension breakdown
-6. **Add recruiter feedback** — mark a candidate as Selected/Hold/Rejected and add private notes
-7. **Export a PDF report** — see the full print-optimized report with recruiter notes included
-8. **Re-upload the same resume** — observe that the score is identical (deterministic AI + caching)
-9. **Switch user** via the profile menu — demonstrate multi-recruiter session isolation
+6. **Add recruiter feedback** — mark a candidate as Selected / Hold / Rejected and add private notes
+7. **Export a PDF report** — see the full print-optimized report with your notes included
+8. **Re-upload the same resume** — notice the score is identical every time (deterministic AI + content hashing)
+9. **Switch user** via the profile avatar menu — each recruiter's history is completely separate
 
 ---
 
