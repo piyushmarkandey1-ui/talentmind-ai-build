@@ -60,6 +60,32 @@ The tool is designed to **augment human judgment**, not replace it. Every recomm
 
 ---
 
+## 🏆 India Runs Hackathon Challenge
+
+We have fully integrated the dataset for the **Intelligent Candidate Discovery & Ranking Challenge**! 
+
+Since the hackathon strictly forbids using network calls (like the Gemini API) for the final submission, we implemented a custom, lightning-fast Python heuristic algorithm to process all 100,000 candidates locally.
+
+### How we solved it:
+1. **The Ranking Algorithm (`scripts/rank.py`)**: 
+   - Reads the 100,000 candidates from `candidates.jsonl` sequentially (very low RAM usage).
+   - Uses an advanced scoring algorithm tailored to the JD: It calculates exact months of experience with Vector Databases/Embeddings, applies massive penalties for "Title-Chasers" (jumping jobs every <1.5 years) and "Pure Academic Researchers," and gives bonus points for high GitHub activity.
+   - Identifies and filters out dataset "Honeypots" (e.g., candidates claiming "Expert" skills with 0 months of experience).
+   - Generates perfectly formatted output and hyper-specific reasoning for each candidate in `submission.csv` in **under 20 seconds** (well under the 5-minute CPU limit).
+
+2. **Web UI Manual Testing**:
+   - We updated the `TalentMind AI` web app to accept the hackathon's `.json` candidate profiles.
+   - When a JSON profile is uploaded to the web app, the backend converts the raw data into a clean text format so you can use Gemini to visually evaluate how the candidate looks to an AI!
+   - We provided a `scripts/split_sample.py` script to generate 50 individual `.json` candidates inside `sample_resumes/` so teammates can test the Web UI instantly.
+
+**To run the ranking script and generate the final submission:**
+```bash
+python scripts/rank.py
+```
+This will instantly generate the `submission.csv` containing the top 100 mathematically ranked candidates!
+
+---
+
 ## Tech Stack
 
 | Layer | Technology |
