@@ -282,7 +282,7 @@ export default function WorkspacePage() {
                     {profile ? (
                       <>
                         <div className={cn('px-4 py-3 border-b', isLight ? 'border-gray-100' : 'border-border/40')}>
-                          <p className={cn('text-sm font-semibold truncate', isLight ? 'text-gray-900' : '')}>{profile.name}</p>
+                          <p className={cn('text-sm font-semibold truncate', isLight ? 'text-gray-900' : 'text-foreground')}>{profile.name}</p>
                           {profile.email && <p className={cn('text-xs truncate', isLight ? 'text-gray-500' : 'text-muted-foreground')}>{profile.email}</p>}
                           {(profile.designation || profile.company) && (
                             <p className={cn('text-xs truncate', isLight ? 'text-gray-400' : 'text-muted-foreground/60')}>

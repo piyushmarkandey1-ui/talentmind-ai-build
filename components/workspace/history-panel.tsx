@@ -133,7 +133,7 @@ export function HistoryPanel({ open, onClose, profile, onRestoreSession }: Histo
                 {profile.name.charAt(0).toUpperCase()}
               </div>
               <div className="flex flex-col min-w-0">
-                <span className={cn('text-sm font-semibold truncate', isLight ? 'text-gray-900' : '')}>{profile.name}</span>
+                <span className={cn('text-sm font-semibold truncate', isLight ? 'text-gray-900' : 'text-foreground')}>{profile.name}</span>
                 {(profile.designation || profile.company) && (
                   <span className={cn('text-xs truncate', isLight ? 'text-gray-500' : 'text-muted-foreground')}>
                     {profile.designation} {profile.designation && profile.company && '·'} {profile.company}
@@ -187,7 +187,7 @@ export function HistoryPanel({ open, onClose, profile, onRestoreSession }: Histo
                             <Briefcase className={cn('size-3.5', isLight ? 'text-blue-600' : 'text-blue')} />
                           </div>
                           <div className="flex flex-col min-w-0">
-                            <span className={cn('text-sm font-semibold truncate', isLight ? 'text-gray-900' : '')}>
+                            <span className={cn('text-sm font-semibold truncate', isLight ? 'text-gray-900' : 'text-foreground')}>
                               {session.jobTitle || 'Untitled role'}
                             </span>
                             <span className={cn('text-[11px] flex items-center gap-1 mt-0.5', isLight ? 'text-gray-500' : 'text-muted-foreground')}>
