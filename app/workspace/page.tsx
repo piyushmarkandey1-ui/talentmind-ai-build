@@ -34,6 +34,8 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useTheme } from '@/components/site/theme-provider'
+import { cn } from '@/lib/utils'
 
 const steps: Step[] = [
   { id: 'role',    label: 'Define role',  description: 'Job description'  },
@@ -42,6 +44,9 @@ const steps: Step[] = [
 ]
 
 export default function WorkspacePage() {
+  const { theme } = useTheme()
+  const isLight = theme === 'light'
+
   // ── Recruiter state ──────────────────────────────────────────────────────
   const [profile, setProfile]               = useState<RecruiterProfile | null>(null)
   const [profileLoaded, setProfileLoaded]   = useState(false)
@@ -164,6 +169,7 @@ export default function WorkspacePage() {
     if (!results) return
     const updated = results.map(r => r.id === resultId && r.status === 'ok' ? { ...r, feedback } : r)
     setResults(updated)
+    // Always persist immediately to localStorage so no feedback is lost
     if (currentSessionId) {
       updateSession(currentSessionId, { results: updated })
     }
@@ -205,7 +211,12 @@ export default function WorkspacePage() {
 
   // ── Shared top bar ───────────────────────────────────────────────────────
   const TopBar = (
-    <header className="sticky top-0 z-40 border-b border-border/60 bg-background/60 backdrop-blur-xl">
+    <header className={cn(
+      'sticky top-0 z-40 border-b backdrop-blur-xl',
+      isLight
+        ? 'border-gray-200 bg-white/80'
+        : 'border-border/60 bg-background/60',
+    )}>
       <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3.5 gap-4">
         <Link href="/" aria-label="TalentMind AI home">
           <Logo />
@@ -216,7 +227,12 @@ export default function WorkspacePage() {
           {profile && (
             <button
               onClick={() => setShowHistoryPanel(true)}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-border/50 bg-white/[0.02] text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-white/[0.04] transition-all"
+              className={cn(
+                'flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-medium transition-all',
+                isLight
+                  ? 'border-gray-200 bg-gray-50 text-gray-500 hover:text-gray-800 hover:bg-white hover:shadow-sm'
+                  : 'border-border/50 bg-white/[0.02] text-muted-foreground hover:text-foreground hover:bg-white/[0.04]',
+              )}
             >
               <History className="size-3.5" />
               History
@@ -228,15 +244,25 @@ export default function WorkspacePage() {
             <div className="relative" ref={profileMenuRef}>
               <button
                 onClick={() => setProfileMenuOpen((o) => !o)}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-border/50 bg-white/[0.02] hover:bg-white/[0.04] transition-all"
+                className={cn(
+                  'flex items-center gap-2 px-3 py-1.5 rounded-xl border transition-all',
+                  isLight
+                    ? 'border-gray-200 bg-gray-50 hover:bg-white hover:shadow-sm'
+                    : 'border-border/50 bg-white/[0.02] hover:bg-white/[0.04]',
+                )}
               >
-                <div className="size-6 rounded-lg bg-gradient-to-br from-blue/40 to-purple/40 border border-white/10 flex items-center justify-center text-xs font-bold text-white">
+                <div className={cn(
+                  'size-6 rounded-lg flex items-center justify-center text-xs font-bold',
+                  isLight
+                    ? 'bg-gradient-to-br from-blue-100 to-violet-100 text-blue-700 border border-blue-200'
+                    : 'bg-gradient-to-br from-blue/40 to-purple/40 border border-white/10 text-white',
+                )}>
                   {profile ? profile.name.charAt(0).toUpperCase() : <User className="size-3" />}
                 </div>
-                <span className="text-xs text-muted-foreground max-w-[100px] truncate hidden sm:block">
+                <span className={cn('text-xs max-w-[100px] truncate hidden sm:block', isLight ? 'text-gray-600' : 'text-muted-foreground')}>
                   {profile ? profile.name : 'Set up profile'}
                 </span>
-                <ChevronDown className="size-3 text-muted-foreground" />
+                <ChevronDown className={cn('size-3', isLight ? 'text-gray-400' : 'text-muted-foreground')} />
               </button>
 
               <AnimatePresence>
@@ -246,15 +272,20 @@ export default function WorkspacePage() {
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -8, scale: 0.96 }}
                     transition={{ duration: 0.15 }}
-                    className="absolute right-0 top-full mt-2 w-56 rounded-2xl border border-border/60 bg-[#0a0a0f] shadow-2xl overflow-hidden z-50"
+                    className={cn(
+                      'absolute right-0 top-full mt-2 w-56 rounded-2xl border shadow-2xl overflow-hidden z-50',
+                      isLight
+                        ? 'border-gray-200 bg-white shadow-[0_20px_60px_rgba(0,0,0,0.12)]'
+                        : 'border-border/60 bg-[#0a0a0f]',
+                    )}
                   >
                     {profile ? (
                       <>
-                        <div className="px-4 py-3 border-b border-border/40">
-                          <p className="text-sm font-semibold truncate">{profile.name}</p>
-                          {profile.email && <p className="text-xs text-muted-foreground truncate">{profile.email}</p>}
+                        <div className={cn('px-4 py-3 border-b', isLight ? 'border-gray-100' : 'border-border/40')}>
+                          <p className={cn('text-sm font-semibold truncate', isLight ? 'text-gray-900' : '')}>{profile.name}</p>
+                          {profile.email && <p className={cn('text-xs truncate', isLight ? 'text-gray-500' : 'text-muted-foreground')}>{profile.email}</p>}
                           {(profile.designation || profile.company) && (
-                            <p className="text-xs text-muted-foreground/60 truncate">
+                            <p className={cn('text-xs truncate', isLight ? 'text-gray-400' : 'text-muted-foreground/60')}>
                               {profile.designation} {profile.designation && profile.company && '·'} {profile.company}
                             </p>
                           )}
@@ -262,21 +293,21 @@ export default function WorkspacePage() {
                         <div className="p-1.5">
                           <button
                             onClick={() => { setShowProfileModal(true); setProfileMenuOpen(false) }}
-                            className="w-full text-left px-3 py-2 rounded-xl text-sm text-muted-foreground hover:text-foreground hover:bg-white/[0.04] transition-colors"
+                            className={cn('w-full text-left px-3 py-2 rounded-xl text-sm transition-colors', isLight ? 'text-gray-600 hover:text-gray-900 hover:bg-gray-50' : 'text-muted-foreground hover:text-foreground hover:bg-white/[0.04]')}
                           >
                             Edit profile
                           </button>
                           <button
                             onClick={() => { setShowHistoryPanel(true); setProfileMenuOpen(false) }}
-                            className="w-full text-left px-3 py-2 rounded-xl text-sm text-muted-foreground hover:text-foreground hover:bg-white/[0.04] transition-colors"
+                            className={cn('w-full text-left px-3 py-2 rounded-xl text-sm transition-colors', isLight ? 'text-gray-600 hover:text-gray-900 hover:bg-gray-50' : 'text-muted-foreground hover:text-foreground hover:bg-white/[0.04]')}
                           >
                             View history
                           </button>
                         </div>
-                        <div className="p-1.5 border-t border-border/40">
+                        <div className={cn('p-1.5 border-t', isLight ? 'border-gray-100' : 'border-border/40')}>
                           <button
                             onClick={handleSwitchUser}
-                            className="w-full text-left px-3 py-2 rounded-xl text-sm text-rose-400/80 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
+                            className={cn('w-full text-left px-3 py-2 rounded-xl text-sm transition-colors', isLight ? 'text-rose-600 hover:text-rose-700 hover:bg-rose-50' : 'text-rose-400/80 hover:text-rose-400 hover:bg-rose-500/10')}
                           >
                             Sign out / Switch user
                           </button>
@@ -286,7 +317,7 @@ export default function WorkspacePage() {
                       <div className="p-1.5">
                         <button
                           onClick={() => { setShowProfileModal(true); setProfileMenuOpen(false) }}
-                          className="w-full text-left px-3 py-2 rounded-xl text-sm text-muted-foreground hover:text-foreground hover:bg-white/[0.04] transition-colors"
+                          className={cn('w-full text-left px-3 py-2 rounded-xl text-sm transition-colors', isLight ? 'text-gray-600 hover:text-gray-900 hover:bg-gray-50' : 'text-muted-foreground hover:text-foreground hover:bg-white/[0.04]')}
                         >
                           Set up profile
                         </button>
@@ -300,7 +331,7 @@ export default function WorkspacePage() {
 
           <Link
             href="/"
-            className="hidden sm:flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+            className={cn('hidden sm:flex items-center gap-1.5 text-sm transition-colors', isLight ? 'text-gray-400 hover:text-gray-800' : 'text-muted-foreground hover:text-foreground')}
           >
             <ArrowLeft className="size-4" />
             Home

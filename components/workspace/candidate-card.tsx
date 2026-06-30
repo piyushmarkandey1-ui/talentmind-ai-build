@@ -259,8 +259,8 @@ export function CandidateCard({
           </h3>
           <ul className="flex flex-col gap-2">
             {analysis.strengths.map((s, i) => (
-              <li key={i} className={cn('text-xs flex items-start gap-2 leading-relaxed', isLight ? 'text-emerald-800' : 'text-emerald-200/80')}>
-                <span className={cn('mt-0.5 shrink-0', isLight ? 'text-emerald-500' : 'text-emerald-500')}>▸</span>
+              <li key={i} className={cn('text-xs flex items-start gap-2 leading-relaxed', isLight ? 'text-gray-800' : 'text-emerald-200/80')}>
+                <span className={cn('mt-0.5 shrink-0', isLight ? 'text-emerald-600 font-bold' : 'text-emerald-500')}>▸</span>
                 {s}
               </li>
             ))}
@@ -279,8 +279,8 @@ export function CandidateCard({
           </h3>
           <ul className="flex flex-col gap-2">
             {analysis.concerns.map((s, i) => (
-              <li key={i} className={cn('text-xs flex items-start gap-2 leading-relaxed', isLight ? 'text-rose-800' : 'text-rose-200/80')}>
-                <span className={cn('mt-0.5 shrink-0', isLight ? 'text-rose-500' : 'text-rose-500')}>▸</span>
+              <li key={i} className={cn('text-xs flex items-start gap-2 leading-relaxed', isLight ? 'text-gray-800' : 'text-rose-200/80')}>
+                <span className={cn('mt-0.5 shrink-0', isLight ? 'text-rose-600 font-bold' : 'text-rose-500')}>▸</span>
                 {s}
               </li>
             ))}
@@ -369,7 +369,7 @@ export function CandidateCard({
                 className={cn(
                   'text-xs flex items-start gap-2.5 p-3 rounded-xl border leading-relaxed',
                   isLight
-                    ? 'bg-white text-gray-700 border-blue-100'
+                    ? 'bg-white text-gray-800 border-blue-100 shadow-sm'
                     : 'bg-black/20 text-blue-100/80 border-blue-500/15',
                 )}
               >
@@ -449,18 +449,24 @@ export function CandidateCard({
           </div>
         </div>
 
-        <textarea
-          value={feedbackNotes}
-          onChange={(e) => setFeedbackNotes(e.target.value)}
-          onBlur={handleNotesBlur}
-          placeholder="Add your private notes about this candidate... (Auto-saves to your history)"
-          className={cn(
-            'w-full min-h-[100px] rounded-xl p-3 text-sm resize-y focus:outline-none transition-colors',
-            isLight
-              ? 'bg-white border border-gray-200 text-gray-800 placeholder:text-gray-400 focus:border-blue-300 focus:ring-1 focus:ring-blue-100'
-              : 'bg-black/20 border border-white/5 text-foreground/90 placeholder:text-muted-foreground/40 focus:border-white/20',
-          )}
-        />
+        <div className="relative">
+          <textarea
+            value={feedbackNotes}
+            onChange={(e) => setFeedbackNotes(e.target.value)}
+            onBlur={handleNotesBlur}
+            placeholder="Add your private notes about this candidate... (auto-saved)"
+            className={cn(
+              'w-full min-h-[120px] rounded-xl p-3 text-sm resize-y focus:outline-none transition-colors',
+              isLight
+                ? 'bg-white border border-gray-200 text-gray-800 placeholder:text-gray-400 focus:border-blue-300 focus:ring-2 focus:ring-blue-50'
+                : 'bg-black/20 border border-white/5 text-foreground/90 placeholder:text-muted-foreground/40 focus:border-white/20',
+            )}
+          />
+          <p className={cn('mt-1.5 text-[10px] flex items-center gap-1', isLight ? 'text-gray-400' : 'text-muted-foreground/50')}>
+            <span className={cn('inline-block size-1.5 rounded-full', isLight ? 'bg-emerald-400' : 'bg-emerald-500')} />
+            Auto-saved to your session history on every change
+          </p>
+        </div>
       </div>
     </div>
   )
