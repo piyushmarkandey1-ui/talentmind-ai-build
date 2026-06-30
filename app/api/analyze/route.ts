@@ -4,160 +4,155 @@ import { analysisSchema } from '@/lib/analysis-schema'
 
 export const maxDuration = 60
 
-// Models to try in order — v1 models first, then v1beta
+// All on v1beta since the key supports it (v1 doesn't support responseMimeType)
 const MODELS = [
-  { model: 'gemini-1.5-flash', version: 'v1' },
-  { model: 'gemini-1.5-pro', version: 'v1' },
-  { model: 'gemini-1.0-pro', version: 'v1' },
-  { model: 'gemini-1.5-flash-latest', version: 'v1' },
-  { model: 'gemini-2.0-flash', version: 'v1beta' },
-  { model: 'gemini-2.0-flash-lite', version: 'v1beta' },
+  'gemini-1.5-flash',
+  'gemini-1.5-flash-002',
+  'gemini-2.0-flash-lite',
+  'gemini-2.0-flash',
+  'gemini-1.5-pro',
 ]
 
-async function callGemini(
-  apiKey: string,
-  modelName: string,
-  apiVersion: string,
-  prompt: string
-): Promise<string> {
-  const url = `https://generativelanguage.googleapis.com/${apiVersion}/models/${modelName}:generateContent?key=${apiKey}`
-
-  const body = {
-    contents: [{ parts: [{ text: prompt }] }],
-    generationConfig: {
-      responseMimeType: 'application/json',
-      temperature: 0.2,
-    },
-  }
+async function callGemini(apiKey: string, model: string, prompt: string): Promise<string> {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`
 
   const res = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: {
+        responseMimeType: 'application/json',
+        temperature: 0.2,
+        maxOutputTokens: 4096,
+      },
+    }),
   })
 
   if (!res.ok) {
-    const errText = await res.text()
-    throw new Error(`${res.status}: ${errText}`)
+    const err = await res.text()
+    throw new Error(`HTTP ${res.status}: ${err.slice(0, 300)}`)
   }
 
   const data = await res.json()
-  const text = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? ''
-  if (!text) throw new Error('Empty response from model')
+  const text: string = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? ''
+  if (!text) throw new Error('Empty response from Gemini')
   return text
 }
 
 export async function POST(req: NextRequest) {
   const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY
   if (!apiKey) {
-    return NextResponse.json({ error: 'Gemini API key not configured on server.' }, { status: 500 })
+    return NextResponse.json(
+      { error: 'GOOGLE_GENERATIVE_AI_API_KEY is not set on the server.' },
+      { status: 500 }
+    )
   }
 
+  let formData: FormData
   try {
-    const formData = await req.formData()
-    const jobTitle = formData.get('jobTitle') as string
-    const jobContent = formData.get('jobContent') as string
-    const resumeFile = formData.get('resume') as File
+    formData = await req.formData()
+  } catch {
+    return NextResponse.json({ error: 'Invalid form data' }, { status: 400 })
+  }
 
-    if (!jobContent || !resumeFile) {
-      return NextResponse.json({ error: 'Missing job content or resume file.' }, { status: 400 })
-    }
+  const jobTitle = (formData.get('jobTitle') as string) ?? ''
+  const jobContent = (formData.get('jobContent') as string) ?? ''
+  const resumeFile = formData.get('resume') as File | null
 
-    const rawText = await extractResumeText(resumeFile)
-    const resumeText = normalizeResumeText(rawText)
+  if (!jobContent.trim() || !resumeFile) {
+    return NextResponse.json({ error: 'Missing job content or resume file.' }, { status: 400 })
+  }
 
-    const prompt = `You are an expert senior technical recruiter and AI hiring assistant.
-Evaluate the candidate resume against the job description. Be objective, precise, and evidence-based.
-Always cite specific evidence from the resume to justify each score.
+  let resumeText: string
+  try {
+    const raw = await extractResumeText(resumeFile)
+    resumeText = normalizeResumeText(raw)
+  } catch (e: any) {
+    return NextResponse.json({ error: `Could not read resume: ${e.message}` }, { status: 422 })
+  }
+
+  const prompt = `You are an expert senior technical recruiter and AI hiring assistant.
+Evaluate the candidate resume against the job description below.
+Be objective, precise, evidence-based. Cite specific resume evidence in every rationale.
 
 Job Title: ${jobTitle || 'Not specified'}
 
-Job Description:
----
+=== JOB DESCRIPTION ===
 ${jobContent}
----
 
-Candidate Resume:
----
+=== CANDIDATE RESUME ===
 ${resumeText}
----
 
-Return ONLY a valid JSON object (no markdown, no code fences, just raw JSON) matching this exact structure:
+Return ONLY a raw JSON object (absolutely no markdown, no code fences, no extra text) with this exact shape:
 {
-  "candidateName": "Full name from resume, or 'Unknown Candidate'",
-  "headline": "Short professional headline e.g. 'Senior React Engineer, 6 yrs exp'",
+  "candidateName": "Full name from resume, or Unknown Candidate",
+  "headline": "Short headline e.g. Senior React Engineer · 6 yrs",
   "overallScore": 85,
-  "recommendation": "strong_yes",
-  "summary": "2-3 sentence executive summary of fit for this role.",
+  "recommendation": "yes",
+  "summary": "2-3 sentence executive summary of this candidate's fit.",
   "dimensions": {
-    "skillsMatch": { "score": 90, "rationale": "One sentence citing resume evidence." },
-    "experienceDepth": { "score": 85, "rationale": "One sentence citing resume evidence." },
-    "education": { "score": 80, "rationale": "One sentence citing resume evidence." },
-    "careerTrajectory": { "score": 82, "rationale": "One sentence citing resume evidence." },
-    "domainExpertise": { "score": 88, "rationale": "One sentence citing resume evidence." },
-    "leadershipSignals": { "score": 75, "rationale": "One sentence citing resume evidence." },
-    "communication": { "score": 80, "rationale": "One sentence citing resume evidence." },
-    "roleFit": { "score": 87, "rationale": "One sentence citing resume evidence." }
+    "skillsMatch":       { "score": 88, "rationale": "One sentence with resume evidence." },
+    "experienceDepth":   { "score": 82, "rationale": "One sentence with resume evidence." },
+    "education":         { "score": 75, "rationale": "One sentence with resume evidence." },
+    "careerTrajectory":  { "score": 80, "rationale": "One sentence with resume evidence." },
+    "domainExpertise":   { "score": 85, "rationale": "One sentence with resume evidence." },
+    "leadershipSignals": { "score": 70, "rationale": "One sentence with resume evidence." },
+    "communication":     { "score": 78, "rationale": "One sentence with resume evidence." },
+    "roleFit":           { "score": 86, "rationale": "One sentence with resume evidence." }
   },
-  "strengths": ["Concrete strength 1", "Concrete strength 2", "Concrete strength 3"],
-  "concerns": ["Gap or concern 1", "Gap or concern 2"],
-  "matchedSkills": ["Skill A", "Skill B", "Skill C"],
-  "missingSkills": ["Missing skill X", "Missing skill Y"],
-  "suggestedQuestions": ["Sharp interview question 1?", "Sharp interview question 2?"]
+  "strengths":          ["strength 1", "strength 2", "strength 3"],
+  "concerns":           ["concern 1", "concern 2"],
+  "matchedSkills":      ["skill A", "skill B"],
+  "missingSkills":      ["missing skill X"],
+  "suggestedQuestions": ["question 1?", "question 2?"]
 }
 
-Rules:
+Constraints:
 - All scores: integers 0-100
-- recommendation: exactly one of strong_yes, yes, maybe, no
-- strengths: 3-5 items
-- concerns: 2-4 items
+- recommendation MUST be exactly one of: strong_yes, yes, maybe, no
+- strengths: 3 to 5 strings
+- concerns: 2 to 4 strings
 - matchedSkills: skills clearly evidenced in the resume
-- missingSkills: required skills not found in the resume
-- suggestedQuestions: 2-3 probing interview questions`
+- missingSkills: required skills absent from the resume (can be empty array [])
+- suggestedQuestions: 2 to 3 sharp interview questions
+- Be honest — not every candidate deserves strong_yes`
 
-    const errors: string[] = []
+  const errors: string[] = []
 
-    for (const { model, version } of MODELS) {
+  for (const model of MODELS) {
+    try {
+      console.log(`[analyze] Trying ${model}...`)
+      const raw = await callGemini(apiKey, model, prompt)
+
+      // Strip any accidental markdown fencing
+      const clean = raw
+        .replace(/^```json\s*/i, '')
+        .replace(/^```\s*/i, '')
+        .replace(/```\s*$/g, '')
+        .trim()
+
+      let parsed: unknown
       try {
-        console.log(`Trying model: ${model} (${version})`)
-        const rawText = await callGemini(apiKey, model, version, prompt)
-
-        // Clean any accidental markdown wrapping
-        const clean = rawText
-          .replace(/^```json\s*/i, '')
-          .replace(/^```\s*/i, '')
-          .replace(/```\s*$/i, '')
-          .trim()
-
-        let parsed: unknown
-        try {
-          parsed = JSON.parse(clean)
-        } catch {
-          throw new Error(`JSON parse failed. Raw: ${clean.slice(0, 300)}`)
-        }
-
-        const validated = analysisSchema.parse(parsed)
-        console.log(`Success with model: ${model}`)
-        return NextResponse.json(validated)
-      } catch (err: any) {
-        const msg = err?.message ?? String(err)
-        console.warn(`Model ${model} failed: ${msg}`)
-        errors.push(`${model}: ${msg}`)
-        // Always continue to next model
+        parsed = JSON.parse(clean)
+      } catch {
+        throw new Error(`JSON parse failed. First 300 chars: ${clean.slice(0, 300)}`)
       }
-    }
 
-    return NextResponse.json(
-      {
-        error: `All models failed. Errors:\n${errors.map((e, i) => `${i + 1}. ${e}`).join('\n')}`,
-      },
-      { status: 500 }
-    )
-  } catch (error: any) {
-    console.error('Unexpected error:', error)
-    return NextResponse.json(
-      { error: error.message || 'Unexpected server error' },
-      { status: 500 }
-    )
+      const validated = analysisSchema.parse(parsed)
+      console.log(`[analyze] Success with ${model}`)
+      return NextResponse.json(validated)
+    } catch (err: any) {
+      const msg = err?.message ?? String(err)
+      console.warn(`[analyze] ${model} failed: ${msg.slice(0, 200)}`)
+      errors.push(`${model}: ${msg.slice(0, 200)}`)
+    }
   }
+
+  return NextResponse.json(
+    {
+      error: `All models failed. Details:\n${errors.map((e, i) => `${i + 1}. ${e}`).join('\n')}`,
+    },
+    { status: 500 }
+  )
 }
