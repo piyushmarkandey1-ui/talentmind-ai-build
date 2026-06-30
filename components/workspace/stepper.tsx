@@ -26,20 +26,20 @@ export function Stepper({
           i < current ? 'complete' : i === current ? 'active' : 'upcoming'
         const reachable = i <= current
         return (
-          <li key={step.id} className="flex flex-1 items-center gap-2 sm:gap-3 min-w-fit">
+          <li key={step.id} className="flex flex-1 items-center gap-1.5 sm:gap-3 min-w-fit">
             <button
               type="button"
               disabled={!reachable || !onStepClick}
               onClick={() => reachable && onStepClick?.(i)}
               className={cn(
-                'group flex items-center gap-2 sm:gap-3 rounded-2xl px-2 py-2 text-left transition-colors',
+                'group flex items-center gap-1.5 sm:gap-3 rounded-lg sm:rounded-2xl px-1.5 py-1 sm:px-2 sm:py-2 text-left transition-colors',
                 reachable && onStepClick && 'hover:bg-white/5',
                 !reachable && 'cursor-not-allowed',
               )}
             >
               <span
                 className={cn(
-                  'relative grid size-8 shrink-0 place-items-center rounded-xl border text-xs sm:size-9 sm:text-sm font-semibold transition-colors',
+                  'relative grid size-6 shrink-0 place-items-center rounded-lg border text-[10px] sm:size-9 sm:rounded-xl sm:text-sm font-semibold transition-colors',
                   state === 'complete' &&
                     'border-transparent bg-emerald/20 text-emerald',
                   state === 'active' &&
@@ -49,21 +49,21 @@ export function Stepper({
                 )}
               >
                 {state === 'complete' ? (
-                  <Check className="size-3 sm:size-4" />
+                  <Check className="size-2.5 sm:size-4" />
                 ) : (
                   i + 1
                 )}
                 {state === 'active' && (
                   <motion.span
                     layoutId="step-glow"
-                    className="absolute inset-0 -z-10 rounded-xl shadow-[0_0_24px_-4px] shadow-blue/60"
+                    className="absolute inset-0 -z-10 rounded-lg sm:rounded-xl shadow-[0_0_24px_-4px] shadow-blue/60"
                   />
                 )}
               </span>
               <span className="flex flex-col sm:flex min-w-0">
                 <span
                   className={cn(
-                    'text-xs font-medium sm:text-sm truncate',
+                    'text-[10px] font-medium sm:text-sm truncate',
                     state === 'upcoming'
                       ? 'text-muted-foreground'
                       : 'text-foreground',
