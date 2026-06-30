@@ -160,7 +160,7 @@ export function generateReportHTML(
     <div class="brand">
       <div class="brand-icon">
         <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-          <path d="M10 2L13 7H17L14 11L15.5 16L10 13L4.5 16L6 11L3 7H7L10 2Z" fill="white" fill-opacity="0.9"/>
+          <path d="M10 2L13 7H17L14 11L15.5 16L10 13L4.5 16L6 11L3 7H7L10 2Z" fill="var(--text)" fill-opacity="0.9"/>
         </svg>
       </div>
       <div>
