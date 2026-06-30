@@ -1,19 +1,4 @@
-import { createClient } from '@supabase/supabase-js'
-
-// Session management to reduce database queries
-// Store session in memory and localStorage to avoid frequent DB calls
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-    detectSessionInUrl: true,
-    flowType: 'pkce',
-  },
-})
+import { supabase } from './client'
 
 // Profile cache structure
 interface Profile {
@@ -80,3 +65,6 @@ export async function isAuthenticated() {
   const user = await getCurrentUser()
   return !!user
 }
+
+// Re-export supabase for convenience
+export { supabase }

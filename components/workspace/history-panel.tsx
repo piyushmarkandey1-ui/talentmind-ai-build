@@ -19,7 +19,7 @@ import {
   type AnalysisSession,
   type RecruiterProfile,
 } from '@/lib/supabase/recruiter-store'
-import { supabase } from '@/lib/supabase/client'
+import { supabase } from '@/lib/supabase/auth'
 import type { AnalysisResult } from '@/lib/analysis-schema'
 import { RECOMMENDATION_META } from '@/lib/analysis-schema'
 import { useTheme } from '@/components/site/theme-provider'
