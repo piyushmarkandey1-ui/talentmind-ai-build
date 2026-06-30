@@ -4,16 +4,16 @@ import { NextRequest, NextResponse } from 'next/server'
 import { extractResumeText, normalizeResumeText } from '@/lib/extract-text'
 import { analysisSchema } from '@/lib/analysis-schema'
 
-export const maxDuration = 60 // Allow up to 60s for analysis
+export const maxDuration = 60
 
 export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData()
-    
+
     const jobTitle = formData.get('jobTitle') as string
     const jobContent = formData.get('jobContent') as string
     const resumeFile = formData.get('resume') as File
-    
+
     if (!jobContent || !resumeFile) {
       return NextResponse.json(
         { error: 'Missing job content or resume file' },
@@ -26,31 +26,34 @@ export async function POST(req: NextRequest) {
     const resumeText = normalizeResumeText(rawResumeText)
 
     // Build the prompt for Gemini
-    const systemPrompt = `You are an expert technical recruiter and AI hiring assistant.
+    const systemPrompt = `You are an expert senior technical recruiter and AI hiring assistant.
 Your task is to evaluate the provided candidate resume against the given job description.
-Be objective, evidence-based, and highly analytical.
+Be objective, precise, evidence-based, and highly analytical.
+Always cite specific evidence from the resume to justify each score.
 
 Job Title: ${jobTitle || 'Not specified'}
+
 Job Description:
+---
 ${jobContent}
+---
 
-Candidate Resume Text:
+Candidate Resume:
+---
 ${resumeText}
+---
 
-Analyze the candidate's fit for the role. Pay attention to:
-- Technical skills vs required skills
-- Depth of experience in relevant areas
-- Leadership and communication signals
-- Career trajectory
-- Education
-
-Generate a structured evaluation matching the requested schema. The rationale for each score must cite evidence from the resume.`
+Evaluate the candidate thoroughly across all dimensions. 
+- Score each dimension from 0-100 based on evidence in the resume.
+- Provide 3-5 concrete strengths, 2-4 real concerns, matched skills, missing skills, and 2-3 sharp interview questions.
+- The recommendation must be one of: strong_yes, yes, maybe, no
+- The overall score should be a weighted composite of all dimension scores.
+- Be honest - not every candidate is a strong yes.`
 
     const { object } = await generateObject({
-      model: google('gemini-2.5-pro'),
+      model: google('gemini-1.5-pro'),
       schema: analysisSchema,
       prompt: systemPrompt,
-      temperature: 0.2, // Low temperature for more analytical/consistent results
     })
 
     return NextResponse.json(object)
