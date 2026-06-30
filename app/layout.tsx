@@ -14,7 +14,6 @@ export const metadata: Metadata = {
   title: 'TalentMind AI — The AI Hiring Operating System',
   description:
     'TalentMind AI evaluates candidates semantically with Google Gemini — understanding resumes, comparing them against job descriptions, ranking talent, and explaining every recommendation.',
-  generator: 'v0.app',
   keywords: ['AI Recruiting', 'Resume Parser', 'Google Gemini HR Tech', 'Applicant Tracking System', 'Talent Discovery', 'Semantic Resume Ranking', 'AI HR Tool'],
   authors: [{ name: 'Piyush Markandey' }],
   creator: 'Piyush Markandey',
