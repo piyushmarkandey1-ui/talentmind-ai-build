@@ -31,6 +31,8 @@ import {
   History,
   User,
   ChevronDown,
+  Sun,
+  Moon,
 } from 'lucide-react'
 import Link from 'next/link'
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -44,7 +46,7 @@ const steps: Step[] = [
 ]
 
 export default function WorkspacePage() {
-  const { theme } = useTheme()
+  const { theme, toggle: toggleTheme } = useTheme()
   const isLight = theme === 'light'
 
   // ── Recruiter state ──────────────────────────────────────────────────────
@@ -223,6 +225,20 @@ export default function WorkspacePage() {
         </Link>
 
         <div className="flex items-center gap-3">
+          {/* Theme toggle */}
+          <button
+            onClick={toggleTheme}
+            aria-label="Toggle theme"
+            className={cn(
+              'flex items-center justify-center size-8 rounded-xl border transition-all',
+              isLight
+                ? 'border-gray-200 bg-gray-50 text-gray-500 hover:text-gray-800 hover:bg-white hover:shadow-sm'
+                : 'border-border/50 bg-white/[0.02] text-muted-foreground hover:text-foreground hover:bg-white/[0.04]'
+            )}
+          >
+            {isLight ? <Moon className="size-4" /> : <Sun className="size-4" />}
+          </button>
+
           {/* History button */}
           {profile && (
             <button
