@@ -15,6 +15,27 @@ export const metadata: Metadata = {
   description:
     'TalentMind AI evaluates candidates semantically with Google Gemini — understanding resumes, comparing them against job descriptions, ranking talent, and explaining every recommendation.',
   generator: 'v0.app',
+  keywords: ['AI Recruiting', 'Resume Parser', 'Google Gemini HR Tech', 'Applicant Tracking System', 'Talent Discovery', 'Semantic Resume Ranking', 'AI HR Tool'],
+  authors: [{ name: 'Piyush Markandey' }],
+  creator: 'Piyush Markandey',
+  metadataBase: new URL('https://talentmind-ai-build.vercel.app'),
+  alternates: {
+    canonical: '/',
+  },
+  openGraph: {
+    type: 'website',
+    locale: 'en_US',
+    url: 'https://talentmind-ai-build.vercel.app',
+    title: 'TalentMind AI — The AI Hiring Operating System',
+    description: 'Turn stacks of resumes into a ranked, explainable shortlist in minutes powered by Google Gemini.',
+    siteName: 'TalentMind AI',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'TalentMind AI — The AI Hiring Operating System',
+    description: 'Turn stacks of resumes into a ranked, explainable shortlist in minutes powered by Google Gemini.',
+    creator: '@piyushmarkandey',
+  },
   icons: {
     icon: '/icon.svg',
     apple: '/apple-icon.png',
