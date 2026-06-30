@@ -18,9 +18,10 @@ export const ACCEPTED_RESUME_TYPES = [
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // .docx
   'application/msword', // .doc
   'text/plain',
+  'application/json', // .json
 ]
 
-export const ACCEPTED_RESUME_EXT = '.pdf,.docx,.doc,.txt'
+export const ACCEPTED_RESUME_EXT = '.pdf,.docx,.doc,.txt,.json'
 
 export const MAX_RESUME_SIZE = 10 * 1024 * 1024 // 10MB
 
@@ -41,6 +42,6 @@ export function isAcceptedResume(file: File): boolean {
   const ext = fileExtension(file.name)
   return (
     ACCEPTED_RESUME_TYPES.includes(file.type) ||
-    ['.pdf', '.docx', '.doc', '.txt'].includes(ext)
+    ['.pdf', '.docx', '.doc', '.txt', '.json'].includes(ext)
   )
 }

@@ -30,6 +30,36 @@ export async function extractResumeText(file: File): Promise<string> {
     return buffer.toString('utf-8')
   }
 
+  if (ext === '.json' || file.type === 'application/json') {
+    const raw = buffer.toString('utf-8')
+    try {
+      const data = JSON.parse(raw)
+      // Check if it's the hackathon schema
+      if (data.candidate_id && data.profile) {
+        let text = `Name: ${data.profile.anonymized_name}\nHeadline: ${data.profile.headline}\nSummary: ${data.profile.summary}\nLocation: ${data.profile.location}\nYears of Experience: ${data.profile.years_of_experience}\nCurrent Title: ${data.profile.current_title}\nCurrent Company: ${data.profile.current_company}\n\nEXPERIENCE:\n`
+        if (data.career_history) {
+          data.career_history.forEach((job: any) => {
+            text += `- ${job.title} at ${job.company} (${job.start_date} to ${job.end_date || 'Present'}) [${job.duration_months} months]\n  ${job.description}\n`
+          })
+        }
+        text += `\nEDUCATION:\n`
+        if (data.education) {
+          data.education.forEach((edu: any) => {
+            text += `- ${edu.degree} in ${edu.field_of_study} at ${edu.institution} (${edu.start_year}-${edu.end_year})\n`
+          })
+        }
+        text += `\nSKILLS:\n`
+        if (data.skills) {
+          text += data.skills.map((s: any) => `${s.name} (${s.proficiency})`).join(', ') + '\n'
+        }
+        return text
+      }
+      return JSON.stringify(data, null, 2)
+    } catch {
+      throw new Error('Invalid JSON file')
+    }
+  }
+
   // Best effort for legacy .doc (binary) — extract readable ASCII runs.
   if (ext === '.doc' || file.type === 'application/msword') {
     const raw = buffer.toString('latin1')
