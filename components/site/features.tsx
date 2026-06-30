@@ -61,7 +61,7 @@ export function Features() {
           Evaluation that thinks like your best recruiter
         </h2>
         <p className="mt-4 text-pretty text-muted-foreground">
-          Eleven dimensions of analysis, distilled into clear, defensible
+          Eight dimensions of analysis, distilled into clear, defensible
           hiring signals.
         </p>
       </Reveal>

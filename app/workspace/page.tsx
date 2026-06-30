@@ -100,7 +100,12 @@ export default function WorkspacePage() {
 
     // If ALL failed, show an inline error instead of transitioning
     if (newResults.every((r) => r.status === 'error')) {
-      setAnalysisError(newResults[0].status === 'error' ? newResults[0].error : 'All analyses failed. Please check your API key.')
+      const firstError = newResults[0]
+      setAnalysisError(
+        firstError.status === 'error'
+          ? firstError.error
+          : 'All analyses failed. Please check your API key and try again.'
+      )
       return
     }
 
@@ -168,7 +173,7 @@ export default function WorkspacePage() {
                   Gemini is analyzing candidates...
                 </h2>
                 <p className="text-sm text-muted-foreground">
-                  Processing resume {progress.done + 1} of {progress.total} for{' '}
+                  Processing resume {Math.min(progress.done + 1, progress.total)} of {progress.total} for{' '}
                   <span className="text-foreground font-medium">{job.title}</span>
                 </p>
               </div>

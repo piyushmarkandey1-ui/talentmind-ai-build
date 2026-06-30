@@ -20,7 +20,7 @@ const steps = [
     icon: ScanLine,
     step: '03',
     title: 'Gemini analyzes',
-    body: 'Each candidate is evaluated across 11 dimensions and scored for fit — live.',
+    body: 'Each candidate is evaluated across 8 dimensions and scored for fit — live.',
   },
   {
     icon: Trophy,
