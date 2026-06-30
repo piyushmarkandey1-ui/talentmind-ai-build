@@ -4,7 +4,6 @@ import csv
 import os
 from datetime import datetime
 
-# Path to candidates file (can be .jsonl or .jsonl.gz)
 DATASET_PATH = r"d:\Hackathons\India runs\talentmind-ai-build\[PUB] India_runs_data_and_ai_challenge\[PUB] India_runs_data_and_ai_challenge\India_runs_data_and_ai_challenge\candidates.jsonl"
 OUT_CSV = "submission.csv"
 
@@ -12,8 +11,7 @@ CONSULTING_FIRMS = {"tcs", "infosys", "wipro", "accenture", "cognizant", "capgem
 VECTOR_DBS = {"pinecone", "weaviate", "qdrant", "milvus", "opensearch", "elasticsearch", "faiss"}
 EMBEDDINGS = {"embeddings", "sentence-transformers", "bge", "e5", "retrieval", "rag"}
 EVAL_METRICS = {"ndcg", "mrr", "map", "a/b test", "correlation", "evaluation framework"}
-BAD_DOMAINS = {"computer vision", "speech", "robotics"}
-FRAMEWORKS = {"langchain", "llamaindex"}
+ACADEMIC_TERMS = {"university", "academic", "research lab", "institute of technology"}
 
 def parse_date(date_str):
     if not date_str: return None
@@ -23,7 +21,6 @@ def parse_date(date_str):
         return None
 
 def is_honeypot(c):
-    # Check for "expert" skills with 0 months experience
     expert_zero = 0
     for skill in c.get("skills", []):
         if skill.get("proficiency") == "expert" and skill.get("duration_months", 1) == 0:
@@ -31,20 +28,17 @@ def is_honeypot(c):
     if expert_zero >= 3:
         return True
             
-    # Check if they have an obviously non-engineering title but lots of AI skills
     title = c.get("profile", {}).get("current_title", "").lower()
     bad_titles = ["marketing", "sales", "hr", "recruiter", "manager", "accountant"]
     if any(bt in title for bt in bad_titles) and not ("engineering manager" in title or "product manager" in title):
-        # Only honeypot if they claim to have AI skills
         text = str(c.get("skills", [])).lower()
         if "python" in text or "machine learning" in text:
             return True
-            
     return False
 
 def score_candidate(c):
     if is_honeypot(c):
-        return -999, "Honeypot profile detected."
+        return -999, "Disqualified: Profile identified as a honeypot."
         
     score = 0.0
     reasoning_parts = []
@@ -56,73 +50,100 @@ def score_candidate(c):
     
     yoe = profile.get("years_of_experience", 0)
     
-    # 1. Experience (Target 5-9)
+    # --- 1. Target Experience (5-9 years) ---
     if 5 <= yoe <= 9:
-        score += 20
+        score += 30
+        reasoning_parts.append(f"Ideal {yoe} YOE.")
     elif 4 <= yoe <= 12:
-        score += 10
+        score += 15
         
-    # 2. Behavioral Signals
-    last_active = parse_date(signals.get("last_active_date"))
-    if last_active:
-        days_inactive = (datetime(2024, 1, 1) - last_active).days # Assume current year is around data collection
-        if days_inactive > 180:
-            score -= 30
-            reasoning_parts.append("Inactive for >6 months.")
+    # --- 2. Advanced Skill Proficiency & Duration ---
+    # Calculate exact months of experience in key areas
+    vector_db_months = 0
+    embed_months = 0
+    
+    for s in skills:
+        name = s.get("name", "").lower()
+        dur = s.get("duration_months", 0)
+        prof = s.get("proficiency", "beginner")
+        
+        prof_multiplier = {"beginner": 0.5, "intermediate": 1.0, "advanced": 1.5, "expert": 2.0}.get(prof, 1.0)
+        
+        if any(v in name for v in VECTOR_DBS):
+            vector_db_months += dur
+            score += 2 * prof_multiplier
+        if any(e in name for e in EMBEDDINGS):
+            embed_months += dur
+            score += 2 * prof_multiplier
             
-    if signals.get("recruiter_response_rate", 1.0) < 0.2:
+    if vector_db_months > 0 or embed_months > 0:
+        score += min((vector_db_months + embed_months) / 2, 20) # Cap duration bonus at 20 pts
+        reasoning_parts.append(f"{vector_db_months + embed_months}mo specialized ML/IR experience.")
+        
+    # --- 3. "Title-Chaser" Penalty ---
+    if len(history) >= 3:
+        avg_tenure = sum(h.get("duration_months", 0) for h in history) / len(history)
+        if avg_tenure < 18:
+            score -= 40
+            reasoning_parts.append(f"Job hopper (avg tenure {round(avg_tenure,1)}mo).")
+            
+    # --- 4. "Pure Research" Penalty ---
+    latest_company = profile.get("current_company", "").lower()
+    title = profile.get("current_title", "").lower()
+    
+    if any(ac in latest_company for ac in ACADEMIC_TERMS):
+        if "engineer" not in title and "developer" not in title:
+            score -= 30
+            reasoning_parts.append("Pure research/academic background.")
+            
+    # Filter consulting
+    if any(cf in latest_company for cf in CONSULTING_FIRMS):
         score -= 20
-        reasoning_parts.append("Very low recruiter response rate.")
+        reasoning_parts.append("Currently at a pure services firm.")
         
-    notice_period = signals.get("notice_period_days", 90)
-    if notice_period <= 30:
-        score += 5
+    # Title enforcement
+    if "engineer" not in title and "data" not in title and "scientist" not in title and "developer" not in title:
+        score -= 25
         
-    # 3. Text Matching for specific tech & product company
+    # --- 5. Textual Matching for unlisted skills ---
     text_corpus = (
         profile.get("headline", "") + " " + 
         profile.get("summary", "") + " " + 
-        " ".join([h.get("description", "") + " " + h.get("title", "") for h in history]) + " " +
-        " ".join([s.get("name", "") for s in skills])
+        " ".join([h.get("description", "") + " " + h.get("title", "") for h in history])
     ).lower()
     
-    has_vector = any(v in text_corpus for v in VECTOR_DBS)
-    has_embed = any(e in text_corpus for e in EMBEDDINGS)
-    has_eval = any(m in text_corpus for m in EVAL_METRICS)
-    has_python = "python" in text_corpus
-    has_recsys = "recommendation system" in text_corpus or "search ranking" in text_corpus
-    
-    if has_vector: score += 15
-    if has_embed: score += 15
-    if has_eval: score += 10
-    if has_python: score += 5
-    if has_recsys: score += 20
-    
-    # 4. Filter consulting
-    latest_company = profile.get("current_company", "").lower()
-    if any(cf in latest_company for cf in CONSULTING_FIRMS):
-        score -= 15
-        reasoning_parts.append("Currently at a pure services/consulting firm.")
+    if "recommendation system" in text_corpus or "search ranking" in text_corpus:
+        score += 25
+        reasoning_parts.append("Built recommendation/ranking systems.")
+    if any(m in text_corpus for m in EVAL_METRICS):
+        score += 15
         
-    title = profile.get("current_title", "").lower()
-    if "engineer" not in title and "data" not in title and "scientist" not in title and "developer" not in title:
+    # --- 6. Behavioral & Redrob Signals ---
+    last_active = parse_date(signals.get("last_active_date"))
+    if last_active:
+        days_inactive = (datetime(2024, 1, 1) - last_active).days
+        if days_inactive > 180:
+            score -= 30
+            reasoning_parts.append("Inactive >6mo.")
+            
+    if signals.get("recruiter_response_rate", 1.0) < 0.2:
         score -= 20
-        reasoning_parts.append("Title does not suggest an engineering role.")
         
-    # Build a reasonable sounding reasoning
-    if has_recsys:
-        reasoning_parts.append("Has direct experience building recommendation/ranking systems.")
-    if has_vector and has_embed:
-        reasoning_parts.append("Strong production experience with vector databases and embeddings.")
-    elif has_embed:
-        reasoning_parts.append("Has relevant embeddings/retrieval experience.")
+    gh_score = signals.get("github_activity_score", -1)
+    if gh_score > 50:
+        score += (gh_score / 10)
+        reasoning_parts.append(f"High GitHub activity ({gh_score}).")
         
-    if 5 <= yoe <= 9:
-        reasoning_parts.append(f"{yoe} years of experience fits the target band.")
+    # Profile completeness as a minor tiebreaker
+    score += signals.get("profile_completeness_score", 0) * 0.01
+
+    if not reasoning_parts:
+        reasoning_parts.append(f"General profile with {yoe} YOE.")
         
     reasoning = " ".join(reasoning_parts)
-    if not reasoning:
-        reasoning = f"Generic profile with {yoe} YOE, limited direct relevance to ranking/IR."
+    # Ensure it's not too long and looks clean
+    if len(reasoning) > 150:
+        reasoning = reasoning[:147] + "..."
         
     return score, reasoning
 
@@ -130,7 +151,6 @@ def main():
     print("Reading dataset...")
     candidates = []
     
-    # Check if gzip or raw
     if os.path.exists(DATASET_PATH + ".gz"):
         f = gzip.open(DATASET_PATH + ".gz", "rt", encoding="utf-8")
     else:
@@ -159,7 +179,7 @@ def main():
     f.close()
     
     print("Sorting candidates...")
-    # Sort descending by score, ascending by candidate_id for ties
+    # Deterministic tie-breaking
     scored_candidates.sort(key=lambda x: (-x["score"], x["candidate_id"]))
     
     top_100 = scored_candidates[:100]
