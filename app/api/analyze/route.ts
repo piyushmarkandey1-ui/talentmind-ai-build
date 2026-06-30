@@ -51,7 +51,7 @@ Evaluate the candidate thoroughly across all dimensions.
 - Be honest - not every candidate is a strong yes.`
 
     const { object } = await generateObject({
-      model: google('gemini-1.5-pro'),
+      model: google('gemini-1.5-flash'),
       schema: analysisSchema,
       prompt: systemPrompt,
     })
