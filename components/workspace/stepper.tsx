@@ -20,26 +20,26 @@ export function Stepper({
   onStepClick?: (index: number) => void
 }) {
   return (
-    <ol className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-0">
+    <ol className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-0">
       {steps.map((step, i) => {
         const state =
           i < current ? 'complete' : i === current ? 'active' : 'upcoming'
         const reachable = i <= current
         return (
-          <li key={step.id} className="flex flex-1 items-center gap-3">
+          <li key={step.id} className="flex flex-1 items-center gap-2 sm:gap-3">
             <button
               type="button"
               disabled={!reachable || !onStepClick}
               onClick={() => reachable && onStepClick?.(i)}
               className={cn(
-                'group flex items-center gap-3 rounded-2xl px-2 py-2 text-left transition-colors',
+                'group flex items-center gap-2 sm:gap-3 rounded-2xl px-2 py-2 text-left transition-colors w-full sm:w-auto',
                 reachable && onStepClick && 'hover:bg-white/5',
                 !reachable && 'cursor-not-allowed',
               )}
             >
               <span
                 className={cn(
-                  'relative grid size-9 shrink-0 place-items-center rounded-xl border text-sm font-semibold transition-colors',
+                  'relative grid size-8 shrink-0 place-items-center rounded-xl border text-xs sm:size-9 sm:text-sm font-semibold transition-colors',
                   state === 'complete' &&
                     'border-transparent bg-emerald/20 text-emerald',
                   state === 'active' &&
@@ -49,7 +49,7 @@ export function Stepper({
                 )}
               >
                 {state === 'complete' ? (
-                  <Check className="size-4" />
+                  <Check className="size-3 sm:size-4" />
                 ) : (
                   i + 1
                 )}
@@ -60,10 +60,10 @@ export function Stepper({
                   />
                 )}
               </span>
-              <span className="hidden flex-col sm:flex">
+              <span className="flex flex-col sm:flex min-w-0">
                 <span
                   className={cn(
-                    'text-sm font-medium',
+                    'text-xs font-medium sm:text-sm truncate',
                     state === 'upcoming'
                       ? 'text-muted-foreground'
                       : 'text-foreground',
@@ -71,7 +71,7 @@ export function Stepper({
                 >
                   {step.label}
                 </span>
-                <span className="text-xs text-muted-foreground">
+                <span className="hidden text-xs text-muted-foreground sm:block">
                   {step.description}
                 </span>
               </span>
