@@ -16,20 +16,7 @@ export const metadata: Metadata = {
     'TalentMind AI evaluates candidates semantically with Google Gemini — understanding resumes, comparing them against job descriptions, ranking talent, and explaining every recommendation.',
   generator: 'v0.app',
   icons: {
-    icon: [
-      {
-        url: '/icon-light-32x32.png',
-        media: '(prefers-color-scheme: light)',
-      },
-      {
-        url: '/icon-dark-32x32.png',
-        media: '(prefers-color-scheme: dark)',
-      },
-      {
-        url: '/icon.svg',
-        type: 'image/svg+xml',
-      },
-    ],
+    icon: '/icon.svg',
     apple: '/apple-icon.png',
   },
 }
