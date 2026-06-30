@@ -99,6 +99,7 @@ export function Features() {
                     ? `${f.lightAccent} ${f.lightIcon}`
                     : `${f.accent} border-border bg-white/5`,
                 )}
+                aria-hidden="true"
               >
                 <f.icon className="size-5" />
               </div>

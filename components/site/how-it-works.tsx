@@ -72,10 +72,11 @@ export function HowItWorks() {
                       ? `${s.color} ${s.bg}`
                       : 'border-border bg-white/5 text-foreground',
                   )}
+                  aria-hidden="true"
                 >
                   <s.icon className="size-5" />
                 </div>
-                <span className={cn('font-mono text-sm', isLight ? 'text-gray-300 font-semibold' : 'text-muted-foreground')}>
+                <span className={cn('font-mono text-sm', isLight ? 'text-gray-300 font-semibold' : 'text-muted-foreground')} aria-hidden="true">
                   {s.step}
                 </span>
               </div>

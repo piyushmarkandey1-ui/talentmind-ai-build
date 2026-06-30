@@ -73,6 +73,7 @@ export function Evaluation() {
                     'size-4 transition-transform group-hover:scale-110',
                     isLight ? 'text-cyan-600' : 'text-cyan',
                   )}
+                  aria-hidden="true"
                 />
                 <span className={cn('text-sm font-medium', isLight ? '' : 'text-foreground')}>
                   {d.label}

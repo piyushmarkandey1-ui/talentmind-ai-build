@@ -89,7 +89,7 @@ export function ResultsDashboard({ results, jobTitle = '', onBack, onUpdateFeedb
           {/* Leaderboard sidebar */}
           <div className="md:col-span-4 flex flex-col gap-3">
             <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground flex items-center gap-2 mb-1">
-              <Trophy className="size-3.5 text-amber-400" />
+              <Trophy className="size-3.5 text-amber-400" aria-hidden="true" />
               Ranked by fit score
             </p>
 

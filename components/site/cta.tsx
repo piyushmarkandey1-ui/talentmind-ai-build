@@ -64,18 +64,6 @@ export function Cta() {
                 <ArrowRight className="ml-1 size-4 transition-transform group-hover:translate-x-0.5" />
               </Link>
             </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              className={cn(
-                'h-12 rounded-xl px-6 transition-all duration-200',
-                isLight
-                  ? 'border-white/30 bg-white/10 text-white hover:bg-white/20 backdrop-blur-sm'
-                  : 'border-border bg-white/5 hover:bg-white/10',
-              )}
-            >
-              Talk to sales
-            </Button>
           </div>
         </div>
       </Reveal>
