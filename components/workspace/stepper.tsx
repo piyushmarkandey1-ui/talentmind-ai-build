@@ -20,19 +20,19 @@ export function Stepper({
   onStepClick?: (index: number) => void
 }) {
   return (
-    <ol className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-0">
+    <ol className="flex items-center gap-0 overflow-x-auto pb-2 sm:pb-0">
       {steps.map((step, i) => {
         const state =
           i < current ? 'complete' : i === current ? 'active' : 'upcoming'
         const reachable = i <= current
         return (
-          <li key={step.id} className="flex flex-1 items-center gap-2 sm:gap-3">
+          <li key={step.id} className="flex flex-1 items-center gap-2 sm:gap-3 min-w-fit">
             <button
               type="button"
               disabled={!reachable || !onStepClick}
               onClick={() => reachable && onStepClick?.(i)}
               className={cn(
-                'group flex items-center gap-2 sm:gap-3 rounded-2xl px-2 py-2 text-left transition-colors w-full sm:w-auto',
+                'group flex items-center gap-2 sm:gap-3 rounded-2xl px-2 py-2 text-left transition-colors',
                 reachable && onStepClick && 'hover:bg-white/5',
                 !reachable && 'cursor-not-allowed',
               )}
