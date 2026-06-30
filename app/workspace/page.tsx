@@ -20,7 +20,8 @@ import {
   updateSession,
   type RecruiterProfile,
   type AnalysisSession,
-} from '@/lib/recruiter-store'
+} from '@/lib/supabase/recruiter-store'
+import { supabase } from '@/lib/supabase/client'
 import { AnimatePresence, motion } from 'motion/react'
 import {
   ArrowLeft,
@@ -57,15 +58,23 @@ export default function WorkspacePage() {
   const [profileMenuOpen, setProfileMenuOpen]   = useState(false)
   const profileMenuRef = useRef<HTMLDivElement>(null)
 
-  // Load profile from localStorage on mount
+  // Load profile from Supabase on mount
   useEffect(() => {
-    const saved = getProfile()
-    if (saved) {
-      setProfile(saved)
-    } else {
-      setShowProfileModal(true)
+    async function loadProfile() {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        const saved = await getProfile(user.id)
+        if (saved) {
+          setProfile(saved)
+        } else {
+          setShowProfileModal(true)
+        }
+      } else {
+        setShowProfileModal(true)
+      }
+      setProfileLoaded(true)
     }
-    setProfileLoaded(true)
+    loadProfile()
   }, [])
 
   // Close profile menu on outside click
@@ -79,14 +88,20 @@ export default function WorkspacePage() {
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
-  const handleProfileSave = (p: RecruiterProfile) => {
-    saveProfile(p)
-    setProfile(p)
-    setShowProfileModal(false)
+  const handleProfileSave = async (p: RecruiterProfile) => {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user) {
+      await saveProfile(user.id, p)
+      setProfile(p)
+      setShowProfileModal(false)
+    }
   }
 
-  const handleSwitchUser = () => {
-    clearProfile()
+  const handleSwitchUser = async () => {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user) {
+      await clearProfile(user.id)
+    }
     setProfile(null)
     resetAll()
     setProfileMenuOpen(false)
@@ -154,13 +169,16 @@ export default function WorkspacePage() {
 
     // Auto-save session linked to recruiter's email
     if (profile) {
-      const session = saveSession({
-        recruiterEmail: profile.email,
-        jobTitle:       job.title,
-        jobContent:     job.content,
-        results:        newResults,
-      })
-      setCurrentSessionId(session.id)
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        const session = await saveSession(user.id, {
+          recruiter_email: profile.email,
+          job_title:       job.title,
+          job_content:     job.content,
+          results:        newResults,
+        })
+        setCurrentSessionId(session.id || '')
+      }
     }
 
     setResults(newResults)
@@ -193,9 +211,9 @@ export default function WorkspacePage() {
 
   // ── Restore a saved session ──────────────────────────────────────────────
   const handleRestoreSession = (session: AnalysisSession) => {
-    setJob({ title: session.jobTitle, content: session.jobContent, source: 'paste' })
+    setJob({ title: session.job_title, content: session.job_content, source: 'paste' })
     setResults(session.results as AnalysisResult[])
-    setCurrentSessionId(session.id)
+    setCurrentSessionId(session.id || null)
     setCurrent(0)
     setResumes([])
   }

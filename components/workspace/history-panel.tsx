@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
 import {
   X,
@@ -18,7 +18,8 @@ import {
   formatSessionDate,
   type AnalysisSession,
   type RecruiterProfile,
-} from '@/lib/recruiter-store'
+} from '@/lib/supabase/recruiter-store'
+import { supabase } from '@/lib/supabase/client'
 import type { AnalysisResult } from '@/lib/analysis-schema'
 import { RECOMMENDATION_META } from '@/lib/analysis-schema'
 import { useTheme } from '@/components/site/theme-provider'
@@ -61,15 +62,32 @@ function ResultBadge({ result, isLight }: { result: AnalysisResult; isLight: boo
 export function HistoryPanel({ open, onClose, profile, onRestoreSession }: HistoryPanelProps) {
   const { theme } = useTheme()
   const isLight = theme === 'light'
-  
-  const [sessions, setSessions] = useState<AnalysisSession[]>(() =>
-    getSessionsByEmail(profile.email)
-  )
+
+  const [sessions, setSessions] = useState<AnalysisSession[]>([])
+  const [loading, setLoading] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
 
-  const handleDelete = (id: string) => {
-    deleteSession(id)
-    setSessions(getSessionsByEmail(profile.email))
+  // Load sessions from Supabase when panel opens
+  useEffect(() => {
+    async function loadSessions() {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        setLoading(true)
+        const data = await getSessionsByEmail(user.id, profile.email)
+        setSessions(data)
+        setLoading(false)
+      }
+    }
+    if (open) loadSessions()
+  }, [open, profile.email])
+
+  const handleDelete = async (id: string) => {
+    await deleteSession(id)
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user) {
+      const data = await getSessionsByEmail(user.id, profile.email)
+      setSessions(data)
+    }
     setConfirmDelete(null)
   }
 
@@ -188,11 +206,11 @@ export function HistoryPanel({ open, onClose, profile, onRestoreSession }: Histo
                           </div>
                           <div className="flex flex-col min-w-0">
                             <span className={cn('text-sm font-semibold truncate', isLight ? 'text-gray-900' : 'text-foreground')}>
-                              {session.jobTitle || 'Untitled role'}
+                              {session.job_title || 'Untitled role'}
                             </span>
                             <span className={cn('text-[11px] flex items-center gap-1 mt-0.5', isLight ? 'text-gray-500' : 'text-muted-foreground')}>
                               <CalendarDays className="size-3" />
-                              {formatSessionDate(session.date)}
+                              {formatSessionDate(session.created_at)}
                             </span>
                           </div>
                         </div>
@@ -226,7 +244,7 @@ export function HistoryPanel({ open, onClose, profile, onRestoreSession }: Histo
                           <div className="flex items-center gap-1.5">
                             <span className={cn('text-xs', isLight ? 'text-gray-500' : 'text-muted-foreground')}>Delete?</span>
                             <button
-                              onClick={() => handleDelete(session.id)}
+                              onClick={() => session.id && handleDelete(session.id)}
                               className="text-xs text-rose-500 hover:text-rose-600 font-medium transition-colors"
                             >
                               Yes
@@ -240,7 +258,7 @@ export function HistoryPanel({ open, onClose, profile, onRestoreSession }: Histo
                           </div>
                         ) : (
                           <button
-                            onClick={() => setConfirmDelete(session.id)}
+                            onClick={() => session.id && setConfirmDelete(session.id)}
                             className={cn('size-7 flex items-center justify-center rounded-lg transition-all', isLight ? 'text-gray-400 hover:text-rose-600 hover:bg-rose-50' : 'text-muted-foreground/40 hover:text-rose-400 hover:bg-rose-500/10')}
                           >
                             <Trash2 className="size-3.5" />
@@ -256,7 +274,7 @@ export function HistoryPanel({ open, onClose, profile, onRestoreSession }: Histo
             {/* Footer */}
             <div className={cn('px-4 pb-4 pt-2 border-t text-center', isLight ? 'border-gray-100' : 'border-border/30')}>
               <p className={cn('text-[10px]', isLight ? 'text-gray-400' : 'text-muted-foreground/40')}>
-                Sessions stored locally in your browser · {sessions.length} session{sessions.length !== 1 ? 's' : ''} found
+                Sessions stored securely in cloud · {sessions.length} session{sessions.length !== 1 ? 's' : ''} found
               </p>
             </div>
           </motion.div>

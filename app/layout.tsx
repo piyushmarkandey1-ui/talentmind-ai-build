@@ -60,14 +60,6 @@ export default function RootLayout({
       className={`dark ${geistSans.variable} ${geistMono.variable}`}
       suppressHydrationWarning
     >
-      <head>
-        {/* Blocking script: apply stored theme before first paint to prevent flash */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem('talentmind_theme');var el=document.documentElement;if(t==='light'){el.classList.remove('dark');el.classList.add('light');}else{el.classList.remove('light');el.classList.add('dark');}}catch(e){}})();`,
-          }}
-        />
-      </head>
       <body className="bg-background font-sans antialiased">
         <ThemeProvider>
           {children}
