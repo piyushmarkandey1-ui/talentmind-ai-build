@@ -1,12 +1,74 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
+import { useTheme } from './theme-provider'
 
 /**
- * Full-bleed ambient backdrop: aurora gradient blobs, soft radial lighting,
- * floating particles on canvas, and a subtle noise texture overlay.
+ * Full-bleed ambient backdrop.
+ * Dark mode: aurora gradient blobs, radial lighting, floating particles, noise.
+ * Light mode: soft geometric mesh with gentle pastel orbs — clean & premium.
  */
 export function AuroraBackground() {
+  const { theme } = useTheme()
+  const isLight = theme === 'light'
+
+  if (isLight) return <LightBackground />
+  return <DarkBackground />
+}
+
+function LightBackground() {
+  return (
+    <div
+      aria-hidden="true"
+      className="pointer-events-none fixed inset-0 -z-10 overflow-hidden"
+      style={{ background: 'linear-gradient(160deg, #F4F6F8 0%, #EEF2F7 50%, #F4F6F8 100%)' }}
+    >
+      {/* Soft pastel orb — top center */}
+      <div
+        className="absolute -top-24 left-1/2 h-[36rem] w-[36rem] -translate-x-1/2 rounded-full"
+        style={{
+          background: 'radial-gradient(circle at center, rgba(37,99,235,0.06), transparent 65%)',
+          animation: 'mesh-drift 20s ease-in-out infinite',
+        }}
+      />
+      {/* Soft orb — bottom left */}
+      <div
+        className="absolute -bottom-32 -left-32 h-[32rem] w-[32rem] rounded-full"
+        style={{
+          background: 'radial-gradient(circle at center, rgba(124,58,237,0.05), transparent 60%)',
+          animation: 'mesh-drift 24s ease-in-out infinite 3s',
+        }}
+      />
+      {/* Soft orb — top right */}
+      <div
+        className="absolute -right-24 top-1/4 h-[28rem] w-[28rem] rounded-full"
+        style={{
+          background: 'radial-gradient(circle at center, rgba(8,145,178,0.04), transparent 60%)',
+          animation: 'mesh-drift 18s ease-in-out infinite 1.5s',
+        }}
+      />
+
+      {/* Subtle dot grid overlay */}
+      <div
+        className="absolute inset-0 opacity-[0.4]"
+        style={{
+          backgroundImage: 'radial-gradient(circle, rgba(15,25,35,0.08) 1px, transparent 1px)',
+          backgroundSize: '32px 32px',
+        }}
+      />
+
+      {/* Very subtle vignette */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background: 'radial-gradient(120% 80% at 50% 0%, transparent 60%, rgba(244,246,248,0.8) 100%)',
+        }}
+      />
+    </div>
+  )
+}
+
+function DarkBackground() {
   return (
     <div
       aria-hidden="true"

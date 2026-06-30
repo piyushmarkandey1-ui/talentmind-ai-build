@@ -1,4 +1,8 @@
+'use client'
+
 import { Logo } from './logo'
+import { useTheme } from './theme-provider'
+import { cn } from '@/lib/utils'
 
 const groups = [
   {
@@ -16,20 +20,29 @@ const groups = [
 ]
 
 export function Footer() {
+  const { theme } = useTheme()
+  const isLight = theme === 'light'
+
   return (
     <footer className="mx-auto max-w-6xl px-6 pb-12 pt-8">
-      <div className="glass rounded-4xl p-8 sm:p-10">
+      <div
+        className={cn(
+          'rounded-4xl p-8 sm:p-10 transition-all duration-300',
+          isLight
+            ? 'bg-white shadow-[12px_12px_32px_rgba(163,177,198,0.45),-12px_-12px_32px_rgba(255,255,255,0.95)] border border-white/80'
+            : 'glass',
+        )}
+      >
         <div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
           <div className="col-span-2 sm:col-span-1">
             <Logo />
-            <p className="mt-4 max-w-xs text-sm leading-relaxed text-muted-foreground">
-              The AI hiring operating system. Final hiring decisions always
-              remain with the recruiter.
+            <p className={cn('mt-4 max-w-xs text-sm leading-relaxed', isLight ? 'text-gray-500' : 'text-muted-foreground')}>
+              The AI hiring operating system. Final hiring decisions always remain with the recruiter.
             </p>
           </div>
           {groups.map((g) => (
             <div key={g.title}>
-              <p className="text-sm font-semibold text-foreground">
+              <p className={cn('text-sm font-semibold', isLight ? 'text-gray-900' : 'text-foreground')}>
                 {g.title}
               </p>
               <ul className="mt-4 flex flex-col gap-3">
@@ -37,7 +50,12 @@ export function Footer() {
                   <li key={l}>
                     <a
                       href="#"
-                      className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                      className={cn(
+                        'text-sm transition-colors',
+                        isLight
+                          ? 'text-gray-500 hover:text-blue-600'
+                          : 'text-muted-foreground hover:text-foreground',
+                      )}
                     >
                       {l}
                     </a>
@@ -47,7 +65,12 @@ export function Footer() {
             </div>
           ))}
         </div>
-        <div className="mt-10 flex flex-col items-center justify-between gap-3 border-t border-border pt-6 text-sm text-muted-foreground sm:flex-row">
+        <div
+          className={cn(
+            'mt-10 flex flex-col items-center justify-between gap-3 border-t pt-6 text-sm sm:flex-row',
+            isLight ? 'border-gray-100 text-gray-400' : 'border-border text-muted-foreground',
+          )}
+        >
           <p>© {new Date().getFullYear()} TalentMind AI. All rights reserved.</p>
           <p>Built with Google Gemini.</p>
         </div>
