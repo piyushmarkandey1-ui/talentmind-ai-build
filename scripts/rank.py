@@ -24,13 +24,22 @@ def parse_date(date_str):
 
 def is_honeypot(c):
     # Check for "expert" skills with 0 months experience
+    expert_zero = 0
     for skill in c.get("skills", []):
         if skill.get("proficiency") == "expert" and skill.get("duration_months", 1) == 0:
+            expert_zero += 1
+    if expert_zero >= 3:
+        return True
+            
+    # Check if they have an obviously non-engineering title but lots of AI skills
+    title = c.get("profile", {}).get("current_title", "").lower()
+    bad_titles = ["marketing", "sales", "hr", "recruiter", "manager", "accountant"]
+    if any(bt in title for bt in bad_titles) and not ("engineering manager" in title or "product manager" in title):
+        # Only honeypot if they claim to have AI skills
+        text = str(c.get("skills", [])).lower()
+        if "python" in text or "machine learning" in text:
             return True
             
-    # Check for illogical career history lengths
-    # Example: 10 years experience but graduated 2 years ago
-    # For now, just check expert skills with 0 duration which is the explicitly mentioned trap
     return False
 
 def score_candidate(c):
@@ -69,7 +78,7 @@ def score_candidate(c):
     if notice_period <= 30:
         score += 5
         
-    # 3. Text Matching for specific tech
+    # 3. Text Matching for specific tech & product company
     text_corpus = (
         profile.get("headline", "") + " " + 
         profile.get("summary", "") + " " + 
@@ -81,11 +90,13 @@ def score_candidate(c):
     has_embed = any(e in text_corpus for e in EMBEDDINGS)
     has_eval = any(m in text_corpus for m in EVAL_METRICS)
     has_python = "python" in text_corpus
+    has_recsys = "recommendation system" in text_corpus or "search ranking" in text_corpus
     
     if has_vector: score += 15
     if has_embed: score += 15
     if has_eval: score += 10
     if has_python: score += 5
+    if has_recsys: score += 20
     
     # 4. Filter consulting
     latest_company = profile.get("current_company", "").lower()
@@ -93,13 +104,20 @@ def score_candidate(c):
         score -= 15
         reasoning_parts.append("Currently at a pure services/consulting firm.")
         
+    title = profile.get("current_title", "").lower()
+    if "engineer" not in title and "data" not in title and "scientist" not in title and "developer" not in title:
+        score -= 20
+        reasoning_parts.append("Title does not suggest an engineering role.")
+        
     # Build a reasonable sounding reasoning
+    if has_recsys:
+        reasoning_parts.append("Has direct experience building recommendation/ranking systems.")
     if has_vector and has_embed:
         reasoning_parts.append("Strong production experience with vector databases and embeddings.")
     elif has_embed:
         reasoning_parts.append("Has relevant embeddings/retrieval experience.")
         
-    if yoe >= 5:
+    if 5 <= yoe <= 9:
         reasoning_parts.append(f"{yoe} years of experience fits the target band.")
         
     reasoning = " ".join(reasoning_parts)
@@ -141,7 +159,8 @@ def main():
     f.close()
     
     print("Sorting candidates...")
-    scored_candidates.sort(key=lambda x: x["score"], reverse=True)
+    # Sort descending by score, ascending by candidate_id for ties
+    scored_candidates.sort(key=lambda x: (-x["score"], x["candidate_id"]))
     
     top_100 = scored_candidates[:100]
     
