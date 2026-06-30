@@ -117,9 +117,11 @@ export function HistoryPanel({ open, onClose, profile, onRestoreSession }: Histo
               </div>
               <div className="flex flex-col min-w-0">
                 <span className="text-sm font-semibold truncate">{profile.name}</span>
-                <span className="text-xs text-muted-foreground truncate">
-                  {profile.designation} · {profile.company}
-                </span>
+                {(profile.designation || profile.company) && (
+                  <span className="text-xs text-muted-foreground truncate">
+                    {profile.designation} {profile.designation && profile.company && '·'} {profile.company}
+                  </span>
+                )}
               </div>
             </div>
 

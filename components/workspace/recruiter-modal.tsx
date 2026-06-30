@@ -21,10 +21,10 @@ const FIELDS: {
   type: string
   icon: React.ElementType
 }[] = [
-  { key: 'name',        label: 'Full name',       placeholder: 'e.g. Priya Sharma',                type: 'text',  icon: User },
-  { key: 'email',       label: 'Work email',       placeholder: 'e.g. priya@company.com',           type: 'email', icon: Mail },
-  { key: 'company',     label: 'Company',          placeholder: 'e.g. Acme Technologies',           type: 'text',  icon: Building2 },
-  { key: 'designation', label: 'Your designation', placeholder: 'e.g. Senior Talent Acquisition Lead', type: 'text', icon: Briefcase },
+  { key: 'name',        label: 'Full name',                  placeholder: 'e.g. Priya Sharma',                type: 'text',  icon: User },
+  { key: 'email',       label: 'Work email (Optional)',      placeholder: 'e.g. priya@company.com',           type: 'email', icon: Mail },
+  { key: 'company',     label: 'Company (Optional)',         placeholder: 'e.g. Acme Technologies',           type: 'text',  icon: Building2 },
+  { key: 'designation', label: 'Your designation (Optional)', placeholder: 'e.g. Senior Talent Acquisition Lead', type: 'text', icon: Briefcase },
 ]
 
 export function RecruiterModal({
@@ -42,11 +42,10 @@ export function RecruiterModal({
 
   const validate = () => {
     const e: typeof errors = {}
-    if (!form.name.trim())        e.name        = 'Name is required'
-    if (!form.email.trim())       e.email       = 'Email is required'
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = 'Enter a valid email'
-    if (!form.company.trim())     e.company     = 'Company is required'
-    if (!form.designation.trim()) e.designation = 'Designation is required'
+    if (!form.name.trim()) e.name = 'Name is required'
+    if (form.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+      e.email = 'Enter a valid email'
+    }
     setErrors(e)
     return Object.keys(e).length === 0
   }

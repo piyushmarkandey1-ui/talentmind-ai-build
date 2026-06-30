@@ -229,10 +229,12 @@ export default function WorkspacePage() {
                       <>
                         <div className="px-4 py-3 border-b border-border/40">
                           <p className="text-sm font-semibold truncate">{profile.name}</p>
-                          <p className="text-xs text-muted-foreground truncate">{profile.email}</p>
-                          <p className="text-xs text-muted-foreground/60 truncate">
-                            {profile.designation} · {profile.company}
-                          </p>
+                          {profile.email && <p className="text-xs text-muted-foreground truncate">{profile.email}</p>}
+                          {(profile.designation || profile.company) && (
+                            <p className="text-xs text-muted-foreground/60 truncate">
+                              {profile.designation} {profile.designation && profile.company && '·'} {profile.company}
+                            </p>
+                          )}
                         </div>
                         <div className="p-1.5">
                           <button
