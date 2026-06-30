@@ -8,7 +8,7 @@ import { Reveal } from './reveal'
 const faqs = [
   {
     q: 'How does TalentMind evaluate candidates?',
-    a: 'TalentMind extracts the text from each resume and sends it to Google Gemini alongside your job description. Gemini compares the two semantically and returns structured scores across 11 dimensions, plus strengths, gaps, and tailored interview questions.',
+    a: 'TalentMind extracts the text from each resume and sends it to Google Gemini alongside your job description. Gemini compares the two semantically and returns structured scores across 8 dimensions, plus strengths, gaps, and tailored interview questions.',
   },
   {
     q: 'Which file formats are supported?',
