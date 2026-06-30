@@ -55,10 +55,12 @@ export function AuthModal({ open, onClose, onSuccess }: AuthModalProps) {
 
           // If session was created (email confirmation disabled), auto-login
           if (data.session) {
+            // Session is automatically persisted by Supabase (persistSession: true)
             onSuccess?.()
             onClose()
           } else {
             // Email confirmation is enabled in Supabase
+            // User needs to confirm email before they can log in
             setError('Please check your email to confirm your account. Or disable email confirmation in Supabase dashboard for immediate access.')
           }
         }
