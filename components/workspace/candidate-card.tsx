@@ -3,6 +3,7 @@
 import { motion } from 'motion/react'
 import type { AnalysisResult } from '@/lib/analysis-schema'
 import { DIMENSIONS, RECOMMENDATION_META } from '@/lib/analysis-schema'
+import { generateReportHTML } from '@/lib/generate-report'
 import {
   CheckCircle2,
   XCircle,
@@ -11,11 +12,45 @@ import {
   BrainCircuit,
   MessageSquare,
   Lightbulb,
+  Download,
 } from 'lucide-react'
+import { useState } from 'react'
 
 type OkResult = Extract<AnalysisResult, { status: 'ok' }>
 
-export function CandidateCard({ result }: { result: OkResult }) {
+export function CandidateCard({
+  result,
+  jobTitle = '',
+}: {
+  result: OkResult
+  jobTitle?: string
+}) {
+  const [exporting, setExporting] = useState(false)
+
+  const handleExport = () => {
+    setExporting(true)
+    const html = generateReportHTML(result.analysis, result.fileName, jobTitle)
+    const blob = new Blob([html], { type: 'text/html' })
+    const url = URL.createObjectURL(blob)
+    const win = window.open(url, '_blank')
+    // Give the window time to load fonts before print dialog
+    if (win) {
+      win.onload = () => {
+        setTimeout(() => {
+          win.print()
+          URL.revokeObjectURL(url)
+        }, 800)
+      }
+    } else {
+      // Fallback: direct download
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `TalentMind_${result.analysis.candidateName.replace(/\s+/g, '_')}_Report.html`
+      a.click()
+      URL.revokeObjectURL(url)
+    }
+    setTimeout(() => setExporting(false), 2000)
+  }
   const { analysis } = result
   const meta = RECOMMENDATION_META[analysis.recommendation]
 
@@ -45,7 +80,7 @@ export function CandidateCard({ result }: { result: OkResult }) {
           <h2 className="text-2xl font-semibold leading-tight">{analysis.candidateName}</h2>
           <p className="text-sm text-muted-foreground">{analysis.headline}</p>
         </div>
-        <div className="flex items-center gap-4 shrink-0">
+        <div className="flex items-center gap-3 shrink-0">
           <span
             className={`px-3 py-1 rounded-full border text-xs font-medium flex items-center gap-1.5 ${toneText[meta.tone]}`}
           >
@@ -61,6 +96,16 @@ export function CandidateCard({ result }: { result: OkResult }) {
               Overall Fit
             </div>
           </div>
+          {/* Export button */}
+          <button
+            onClick={handleExport}
+            disabled={exporting}
+            title="Export as PDF"
+            className="flex items-center gap-2 px-3 py-2 rounded-xl border border-border/60 bg-white/[0.03] hover:bg-white/[0.06] hover:border-border text-xs font-medium text-muted-foreground hover:text-foreground transition-all disabled:opacity-50 shrink-0"
+          >
+            <Download className="size-3.5" />
+            {exporting ? 'Preparing...' : 'Export PDF'}
+          </button>
         </div>
       </div>
 

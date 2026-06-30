@@ -10,10 +10,11 @@ import { ArrowLeft, Trophy, Users, AlertCircle } from 'lucide-react'
 
 interface ResultsDashboardProps {
   results: AnalysisResult[]
+  jobTitle?: string
   onBack: () => void
 }
 
-export function ResultsDashboard({ results, onBack }: ResultsDashboardProps) {
+export function ResultsDashboard({ results, jobTitle = '', onBack }: ResultsDashboardProps) {
   const successfulResults = results.filter(
     (r): r is Extract<AnalysisResult, { status: 'ok' }> => r.status === 'ok'
   )
@@ -170,7 +171,7 @@ export function ResultsDashboard({ results, onBack }: ResultsDashboardProps) {
                   exit={{ opacity: 0, x: -16 }}
                   transition={{ duration: 0.25, ease: 'easeOut' }}
                 >
-                  <CandidateCard result={selectedResult} />
+                  <CandidateCard result={selectedResult} jobTitle={jobTitle} />
                 </motion.div>
               )}
             </AnimatePresence>

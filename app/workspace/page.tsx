@@ -141,7 +141,7 @@ export default function WorkspacePage() {
           </div>
         </header>
         <div className="mx-auto w-full max-w-5xl px-4 pb-20 pt-10">
-          <ResultsDashboard results={results} onBack={resetAll} />
+          <ResultsDashboard results={results} jobTitle={job.title} onBack={resetAll} />
         </div>
       </main>
     )
