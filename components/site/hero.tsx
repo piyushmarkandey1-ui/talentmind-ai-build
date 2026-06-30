@@ -35,25 +35,24 @@ export function Hero() {
   return (
     <section className="relative mx-auto flex max-w-6xl flex-col items-center px-6 pb-20 pt-36 text-center sm:pt-44">
       {/* Badge */}
-      <motion.a
-        href="#product"
+      <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.7, ease: easing }}
         className={cn(
-          'inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs transition-all',
+          'inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs',
           isLight
-            ? 'bg-white text-gray-500 shadow-[4px_4px_12px_rgba(163,177,198,0.4),-4px_-4px_12px_rgba(255,255,255,0.9)] hover:text-gray-900 border border-white/90'
-            : 'glass text-muted-foreground hover:text-foreground',
+            ? 'bg-white text-gray-500 shadow-[4px_4px_12px_rgba(163,177,198,0.4),-4px_-4px_12px_rgba(255,255,255,0.9)] border border-white/90'
+            : 'glass text-muted-foreground',
         )}
       >
-        <Sparkles className={cn('size-3.5', isLight ? 'text-blue-500' : 'text-cyan')} />
+        <Sparkles className={cn('size-3.5', isLight ? 'text-blue-500' : 'text-cyan')} aria-hidden="true" />
         Powered by Google Gemini
-        <span className={isLight ? 'text-gray-300' : 'text-foreground/30'}>·</span>
+        <span className={isLight ? 'text-gray-300' : 'text-foreground/30'} aria-hidden="true">·</span>
         <span className={cn('inline-flex items-center gap-1', isLight ? 'text-blue-600 font-medium' : 'text-foreground')}>
-          Now in beta <ArrowRight className="size-3" />
+          Now in beta
         </span>
-      </motion.a>
+      </motion.div>
 
       {/* Headline */}
       <motion.h1
@@ -101,18 +100,6 @@ export function Hero() {
             <ArrowRight className="ml-1 size-4 transition-transform group-hover:translate-x-0.5" />
           </Link>
         </Button>
-        <Button
-          size="lg"
-          variant="outline"
-          className={cn(
-            'h-12 rounded-xl px-6 transition-all duration-200',
-            isLight
-              ? 'bg-[#F4F6F8] border-gray-200 text-gray-600 hover:text-gray-900 hover:bg-white shadow-[3px_3px_8px_rgba(163,177,198,0.35),-3px_-3px_8px_rgba(255,255,255,0.8)] hover:shadow-[4px_4px_12px_rgba(163,177,198,0.45),-4px_-4px_12px_rgba(255,255,255,0.9)]'
-              : 'border-border bg-white/5 hover:bg-white/10',
-          )}
-        >
-          Watch the demo
-        </Button>
       </motion.div>
 
       {/* Social proof */}
@@ -122,12 +109,11 @@ export function Hero() {
         transition={{ duration: 0.8, delay: 0.32 }}
         className="mt-6 flex items-center gap-2 text-sm text-muted-foreground"
       >
-        <div className="flex">
+        <div className="flex" aria-hidden="true">
           {Array.from({ length: 5 }).map((_, i) => (
             <Star
               key={i}
               className={cn('size-3.5', isLight ? 'fill-amber-400 text-amber-400' : 'fill-cyan text-cyan')}
-              aria-hidden="true"
             />
           ))}
         </div>

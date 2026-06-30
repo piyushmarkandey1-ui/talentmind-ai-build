@@ -9,7 +9,7 @@ import { Logo } from './logo'
 import { useTheme } from './theme-provider'
 
 const links = [
-  { label: 'Product', href: '#product' },
+  { label: 'Features', href: '#product' },
   { label: 'How it works', href: '#how-it-works' },
   { label: 'Evaluation', href: '#evaluation' },
   { label: 'FAQ', href: '#faq' },
@@ -40,9 +40,9 @@ export function Navbar() {
             : 'border border-transparent',
         )}
       >
-        <a href="#" aria-label="TalentMind AI home">
+        <Link href="/" aria-label="TalentMind AI home">
           <Logo />
-        </a>
+        </Link>
 
         <div className="hidden items-center gap-1 md:flex">
           {links.map((l) => (

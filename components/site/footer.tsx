@@ -7,15 +7,11 @@ import { cn } from '@/lib/utils'
 const groups = [
   {
     title: 'Product',
-    links: ['Overview', 'How it works', 'Evaluation', 'Pricing'],
-  },
-  {
-    title: 'Company',
-    links: ['About', 'Careers', 'Blog', 'Contact'],
+    links: ['How it works', 'Evaluation'],
   },
   {
     title: 'Legal',
-    links: ['Privacy', 'Terms', 'Security', 'DPA'],
+    links: ['Privacy', 'Terms'],
   },
 ]
 
@@ -48,17 +44,9 @@ export function Footer() {
               <ul className="mt-4 flex flex-col gap-3">
                 {g.links.map((l) => (
                   <li key={l}>
-                    <a
-                      href="#"
-                      className={cn(
-                        'text-sm transition-colors',
-                        isLight
-                          ? 'text-gray-500 hover:text-blue-600'
-                          : 'text-muted-foreground hover:text-foreground',
-                      )}
-                    >
+                    <span className={cn('text-sm', isLight ? 'text-gray-500' : 'text-muted-foreground')}>
                       {l}
-                    </a>
+                    </span>
                   </li>
                 ))}
               </ul>
