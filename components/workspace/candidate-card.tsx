@@ -14,6 +14,7 @@ import {
   Lightbulb,
   Download,
   ClipboardEdit,
+  Trash2,
 } from 'lucide-react'
 import { useState } from 'react'
 
@@ -23,10 +24,12 @@ export function CandidateCard({
   result,
   jobTitle = '',
   onUpdateFeedback,
+  onDelete,
 }: {
   result: OkResult
   jobTitle?: string
   onUpdateFeedback?: (feedback: RecruiterFeedback) => void
+  onDelete?: () => void
 }) {
   const [exporting, setExporting] = useState(false)
   const [feedbackNotes, setFeedbackNotes] = useState(result.feedback?.notes ?? '')
@@ -112,16 +115,30 @@ export function CandidateCard({
               Overall Fit
             </div>
           </div>
-          {/* Export button */}
-          <button
-            onClick={handleExport}
-            disabled={exporting}
-            title="Export as PDF"
-            className="flex items-center gap-2 px-3 py-2 rounded-xl border border-border/60 bg-white/[0.03] hover:bg-white/[0.06] hover:border-border text-xs font-medium text-muted-foreground hover:text-foreground transition-all disabled:opacity-50 shrink-0"
-          >
-            <Download className="size-3.5" />
-            {exporting ? 'Preparing...' : 'Export PDF'}
-          </button>
+          
+          <div className="flex items-center gap-2">
+            {/* Export button */}
+            <button
+              onClick={handleExport}
+              disabled={exporting}
+              title="Export as PDF"
+              className="flex items-center gap-2 px-3 py-2 rounded-xl border border-border/60 bg-white/[0.03] hover:bg-white/[0.06] hover:border-border text-xs font-medium text-muted-foreground hover:text-foreground transition-all disabled:opacity-50 shrink-0"
+            >
+              <Download className="size-3.5" />
+              {exporting ? 'Preparing...' : 'Export PDF'}
+            </button>
+
+            {/* Delete button */}
+            {onDelete && (
+              <button
+                onClick={onDelete}
+                title="Remove candidate"
+                className="flex items-center justify-center size-9 rounded-xl border border-border/60 bg-white/[0.03] hover:bg-rose-500/10 hover:border-rose-500/30 text-muted-foreground hover:text-rose-400 transition-all shrink-0"
+              >
+                <Trash2 className="size-4" />
+              </button>
+            )}
+          </div>
         </div>
       </div>
 

@@ -13,9 +13,10 @@ interface ResultsDashboardProps {
   jobTitle?: string
   onBack: () => void
   onUpdateFeedback?: (resultId: string, feedback: RecruiterFeedback) => void
+  onDeleteResult?: (resultId: string) => void
 }
 
-export function ResultsDashboard({ results, jobTitle = '', onBack, onUpdateFeedback }: ResultsDashboardProps) {
+export function ResultsDashboard({ results, jobTitle = '', onBack, onUpdateFeedback, onDeleteResult }: ResultsDashboardProps) {
   const successfulResults = results.filter(
     (r): r is Extract<AnalysisResult, { status: 'ok' }> => r.status === 'ok'
   )
@@ -176,6 +177,7 @@ export function ResultsDashboard({ results, jobTitle = '', onBack, onUpdateFeedb
                     result={selectedResult} 
                     jobTitle={jobTitle} 
                     onUpdateFeedback={(feedback) => onUpdateFeedback?.(selectedResult.id, feedback)}
+                    onDelete={() => onDeleteResult?.(selectedResult.id)}
                   />
                 </motion.div>
               )}

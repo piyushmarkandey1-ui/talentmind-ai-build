@@ -160,6 +160,20 @@ export default function WorkspacePage() {
     }
   }
 
+  // ── Delete Candidate ─────────────────────────────────────────────────────
+  const handleDeleteResult = (resultId: string) => {
+    if (!results) return
+    const updated = results.filter((r) => r.id !== resultId)
+    
+    if (updated.length === 0) {
+      resetAll()
+      if (currentSessionId) updateSession(currentSessionId, { results: [] })
+    } else {
+      setResults(updated)
+      if (currentSessionId) updateSession(currentSessionId, { results: updated })
+    }
+  }
+
   // ── Restore a saved session ──────────────────────────────────────────────
   const handleRestoreSession = (session: AnalysisSession) => {
     setJob({ title: session.jobTitle, content: session.jobContent, source: 'paste' })
@@ -313,6 +327,7 @@ export default function WorkspacePage() {
             jobTitle={job.title} 
             onBack={resetAll} 
             onUpdateFeedback={handleUpdateFeedback}
+            onDeleteResult={handleDeleteResult}
           />
         </div>
       </main>
