@@ -59,7 +59,7 @@ export function Hero() {
         initial={{ opacity: 0, y: 24, filter: 'blur(10px)' }}
         animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
         transition={{ duration: 0.8, delay: 0.08, ease: easing }}
-        className="mt-7 max-w-4xl text-balance text-5xl font-semibold leading-[1.05] tracking-tight sm:text-6xl md:text-7xl"
+        className="mt-7 max-w-4xl text-balance text-4xl font-semibold leading-[1.1] tracking-tight sm:text-5xl md:text-6xl lg:text-7xl"
       >
         The AI hiring operating
         <br className="hidden sm:block" /> system for{' '}
@@ -71,7 +71,7 @@ export function Hero() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, delay: 0.16, ease: easing }}
-        className="mt-6 max-w-2xl text-pretty text-lg leading-relaxed text-muted-foreground"
+        className="mt-6 max-w-2xl text-pretty text-base leading-relaxed text-muted-foreground sm:text-lg"
       >
         TalentMind reads resumes the way your best recruiter does — understanding
         context, comparing candidates to the role, ranking by true fit, and

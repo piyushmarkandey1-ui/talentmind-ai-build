@@ -8,20 +8,17 @@ import { ResumeStep } from '@/components/workspace/resume-step'
 import { ReviewStep } from '@/components/workspace/review-step'
 import { ResultsDashboard } from '@/components/workspace/results-dashboard'
 import { Stepper, type Step } from '@/components/workspace/stepper'
-import { RecruiterModal } from '@/components/workspace/recruiter-modal'
 import { HistoryPanel } from '@/components/workspace/history-panel'
 import type { JobDescription, ResumeFile } from '@/lib/workspace'
 import { type AnalysisResult, type RecruiterFeedback } from '@/lib/analysis-schema'
 import {
-  getProfile,
-  saveProfile,
-  clearProfile,
   saveSession,
   updateSession,
   type RecruiterProfile,
   type AnalysisSession,
 } from '@/lib/supabase/recruiter-store'
-import { supabase } from '@/lib/supabase/client'
+import { supabase, getCachedProfile, clearProfileCache } from '@/lib/supabase/auth'
+import { AuthModal } from '@/components/auth/auth-modal'
 import { AnimatePresence, motion } from 'motion/react'
 import {
   ArrowLeft,
@@ -53,7 +50,7 @@ export default function WorkspacePage() {
   // ── Recruiter state ──────────────────────────────────────────────────────
   const [profile, setProfile]               = useState<RecruiterProfile | null>(null)
   const [profileLoaded, setProfileLoaded]   = useState(false)
-  const [showProfileModal, setShowProfileModal] = useState(false)
+  const [showAuthModal, setShowAuthModal] = useState(false)
   const [showHistoryPanel, setShowHistoryPanel] = useState(false)
   const [profileMenuOpen, setProfileMenuOpen]   = useState(false)
   const profileMenuRef = useRef<HTMLDivElement>(null)
@@ -63,14 +60,18 @@ export default function WorkspacePage() {
     async function loadProfile() {
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
-        const saved = await getProfile(user.id)
+        const saved = await getCachedProfile(user.id)
         if (saved) {
-          setProfile(saved)
-        } else {
-          setShowProfileModal(true)
+          setProfile({
+            id: saved.id,
+            name: saved.full_name || '',
+            email: saved.email,
+            company: '',
+            designation: '',
+          })
         }
       } else {
-        setShowProfileModal(true)
+        setShowAuthModal(true)
       }
       setProfileLoaded(true)
     }
@@ -88,24 +89,30 @@ export default function WorkspacePage() {
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
-  const handleProfileSave = async (p: RecruiterProfile) => {
+  const handleAuthSuccess = async () => {
     const { data: { user } } = await supabase.auth.getUser()
     if (user) {
-      await saveProfile(user.id, p)
-      setProfile(p)
-      setShowProfileModal(false)
+      const saved = await getCachedProfile(user.id)
+      if (saved) {
+        setProfile({
+          id: saved.id,
+          name: saved.full_name || '',
+          email: saved.email,
+          company: '',
+          designation: '',
+        })
+      }
     }
+    setShowAuthModal(false)
   }
 
   const handleSwitchUser = async () => {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (user) {
-      await clearProfile(user.id)
-    }
+    await supabase.auth.signOut()
+    clearProfileCache()
     setProfile(null)
     resetAll()
     setProfileMenuOpen(false)
-    setShowProfileModal(true)
+    setShowAuthModal(true)
   }
 
   // ── Wizard state ─────────────────────────────────────────────────────────
@@ -326,12 +333,6 @@ export default function WorkspacePage() {
                         </div>
                         <div className="p-1.5">
                           <button
-                            onClick={() => { setShowProfileModal(true); setProfileMenuOpen(false) }}
-                            className={cn('w-full text-left px-3 py-2 rounded-xl text-sm transition-colors', isLight ? 'text-gray-600 hover:text-gray-900 hover:bg-gray-50' : 'text-muted-foreground hover:text-foreground hover:bg-white/[0.04]')}
-                          >
-                            Edit profile
-                          </button>
-                          <button
                             onClick={() => { setShowHistoryPanel(true); setProfileMenuOpen(false) }}
                             className={cn('w-full text-left px-3 py-2 rounded-xl text-sm transition-colors', isLight ? 'text-gray-600 hover:text-gray-900 hover:bg-gray-50' : 'text-muted-foreground hover:text-foreground hover:bg-white/[0.04]')}
                           >
@@ -347,16 +348,7 @@ export default function WorkspacePage() {
                           </button>
                         </div>
                       </>
-                    ) : (
-                      <div className="p-1.5">
-                        <button
-                          onClick={() => { setShowProfileModal(true); setProfileMenuOpen(false) }}
-                          className={cn('w-full text-left px-3 py-2 rounded-xl text-sm transition-colors', isLight ? 'text-gray-600 hover:text-gray-900 hover:bg-gray-50' : 'text-muted-foreground hover:text-foreground hover:bg-white/[0.04]')}
-                        >
-                          Set up profile
-                        </button>
-                      </div>
-                    )}
+                    ) : null}
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -378,12 +370,10 @@ export default function WorkspacePage() {
   // ── Modals / Panels ──────────────────────────────────────────────────────
   const Overlays = (
     <>
-      <RecruiterModal
-        open={showProfileModal}
-        initial={profile}
-        onSave={handleProfileSave}
-        onClose={() => profile && setShowProfileModal(false)}
-        dismissible={!!profile}
+      <AuthModal
+        open={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        onSuccess={handleAuthSuccess}
       />
       {profile && (
         <HistoryPanel

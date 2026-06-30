@@ -70,13 +70,13 @@ export function Features() {
   const isLight = theme === 'light'
 
   return (
-    <section id="product" className="mx-auto max-w-6xl px-6 py-24">
+    <section id="product" className="mx-auto max-w-6xl px-6 py-24 sm:py-32">
       <Reveal className="mx-auto max-w-2xl text-center">
         <p className={cn('text-sm font-medium', isLight ? 'text-cyan-600' : 'text-cyan')}>Why TalentMind</p>
-        <h2 className="mt-3 text-balance text-4xl font-semibold tracking-tight sm:text-5xl">
+        <h2 className="mt-3 text-balance text-3xl font-semibold tracking-tight sm:text-4xl md:text-5xl">
           Evaluation that thinks like your best recruiter
         </h2>
-        <p className={cn('mt-4 text-pretty', isLight ? 'text-gray-500' : 'text-muted-foreground')}>
+        <p className={cn('mt-4 text-pretty text-base sm:text-lg', isLight ? 'text-gray-500' : 'text-muted-foreground')}>
           Eight dimensions of analysis, distilled into clear, defensible hiring signals.
         </p>
       </Reveal>

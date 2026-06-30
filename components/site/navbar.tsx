@@ -2,11 +2,13 @@
 
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import { Menu, Moon, Sun, X } from 'lucide-react'
+import { Menu, Moon, Sun, X, LogOut } from 'lucide-react'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { Logo } from './logo'
 import { useTheme } from './theme-provider'
+import { AuthModal } from '@/components/auth/auth-modal'
+import { supabase } from '@/lib/supabase/auth'
 
 const links = [
   { label: 'Features', href: '#product' },
@@ -18,6 +20,8 @@ const links = [
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false)
   const [open, setOpen] = useState(false)
+  const [showAuthModal, setShowAuthModal] = useState(false)
+  const [user, setUser] = useState<any>(null)
   const { theme, toggle } = useTheme()
   const isLight = theme === 'light'
 
@@ -26,6 +30,19 @@ export function Navbar() {
     onScroll()
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
+  // Check auth state on mount
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUser(user)
+    })
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null)
+    })
+
+    return () => subscription.unsubscribe()
   }, [])
 
   return (
@@ -77,17 +94,48 @@ export function Navbar() {
             {isLight ? <Moon className="size-4" /> : <Sun className="size-4" />}
           </button>
 
-          <Button
-            asChild
-            className={cn(
-              'rounded-xl transition-all duration-200',
-              isLight
-                ? 'bg-[#2563EB] text-white hover:bg-[#1D4ED8] shadow-[0_4px_14px_rgba(37,99,235,0.35)] hover:shadow-[0_6px_20px_rgba(37,99,235,0.45)] hover:-translate-y-px'
-                : 'bg-foreground text-background hover:bg-foreground/90',
-            )}
-          >
-            <Link href="/workspace">Start free</Link>
-          </Button>
+          {user ? (
+            <>
+              <Button
+                asChild
+                className={cn(
+                  'rounded-xl transition-all duration-200',
+                  isLight
+                    ? 'bg-[#2563EB] text-white hover:bg-[#1D4ED8] shadow-[0_4px_14px_rgba(37,99,235,0.35)] hover:shadow-[0_6px_20px_rgba(37,99,235,0.45)] hover:-translate-y-px'
+                    : 'bg-foreground text-background hover:bg-foreground/90',
+                )}
+              >
+                <Link href="/workspace">Workspace</Link>
+              </Button>
+              <button
+                onClick={async () => {
+                  await supabase.auth.signOut()
+                  setUser(null)
+                }}
+                className={cn(
+                  'grid size-9 place-items-center rounded-xl transition-all duration-200',
+                  isLight
+                    ? 'bg-[#EEF2F7] text-gray-500 hover:text-gray-900 shadow-[3px_3px_8px_rgba(163,177,198,0.4),-3px_-3px_8px_rgba(255,255,255,0.8)] hover:shadow-[4px_4px_12px_rgba(163,177,198,0.5),-4px_-4px_12px_rgba(255,255,255,0.9)]'
+                    : 'border border-border text-muted-foreground hover:text-foreground hover:border-border/80',
+                )}
+                aria-label="Sign out"
+              >
+                <LogOut className="size-4" />
+              </button>
+            </>
+          ) : (
+            <Button
+              onClick={() => setShowAuthModal(true)}
+              className={cn(
+                'rounded-xl transition-all duration-200',
+                isLight
+                  ? 'bg-[#2563EB] text-white hover:bg-[#1D4ED8] shadow-[0_4px_14px_rgba(37,99,235,0.35)] hover:shadow-[0_6px_20px_rgba(37,99,235,0.45)] hover:-translate-y-px'
+                  : 'bg-foreground text-background hover:bg-foreground/90',
+              )}
+            >
+              Sign in
+            </Button>
+          )}
         </div>
 
         <div className="flex items-center gap-2 md:hidden">
@@ -151,22 +199,58 @@ export function Navbar() {
                 isLight ? 'border-gray-100' : 'border-border',
               )}
             >
-              <Button
-                asChild
-                className={cn(
-                  isLight
-                    ? 'bg-[#2563EB] text-white hover:bg-[#1D4ED8] shadow-[0_4px_14px_rgba(37,99,235,0.35)]'
-                    : 'bg-foreground text-background hover:bg-foreground/90',
-                )}
-              >
-                <Link href="/workspace" onClick={() => setOpen(false)}>
-                  Start free
-                </Link>
-              </Button>
+              {user ? (
+                <>
+                  <Button
+                    asChild
+                    className={cn(
+                      isLight
+                        ? 'bg-[#2563EB] text-white hover:bg-[#1D4ED8] shadow-[0_4px_14px_rgba(37,99,235,0.35)]'
+                        : 'bg-foreground text-background hover:bg-foreground/90',
+                    )}
+                  >
+                    <Link href="/workspace" onClick={() => setOpen(false)}>
+                      Workspace
+                    </Link>
+                  </Button>
+                  <button
+                    onClick={async () => {
+                      await supabase.auth.signOut()
+                      setUser(null)
+                      setOpen(false)
+                    }}
+                    className={cn(
+                      'flex items-center justify-center gap-2 rounded-lg px-3 py-3 text-sm transition-colors',
+                      isLight
+                        ? 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
+                        : 'text-muted-foreground hover:bg-white/5 hover:text-foreground',
+                    )}
+                  >
+                    <LogOut className="size-4" />
+                    Sign out
+                  </button>
+                </>
+              ) : (
+                <Button
+                  onClick={() => {
+                    setShowAuthModal(true)
+                    setOpen(false)
+                  }}
+                  className={cn(
+                    isLight
+                      ? 'bg-[#2563EB] text-white hover:bg-[#1D4ED8] shadow-[0_4px_14px_rgba(37,99,235,0.35)]'
+                      : 'bg-foreground text-background hover:bg-foreground/90',
+                  )}
+                >
+                  Sign in
+                </Button>
+              )}
             </div>
           </div>
         </div>
       )}
+
+      <AuthModal open={showAuthModal} onClose={() => setShowAuthModal(false)} />
     </header>
   )
 }
