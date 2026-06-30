@@ -15,6 +15,7 @@ import { type AnalysisResult, type RecruiterFeedback } from '@/lib/analysis-sche
 import {
   getProfile,
   saveProfile,
+  clearProfile,
   saveSession,
   updateSession,
   type RecruiterProfile,
@@ -75,6 +76,14 @@ export default function WorkspacePage() {
     saveProfile(p)
     setProfile(p)
     setShowProfileModal(false)
+  }
+
+  const handleSwitchUser = () => {
+    clearProfile()
+    setProfile(null)
+    resetAll()
+    setProfileMenuOpen(false)
+    setShowProfileModal(true)
   }
 
   // ── Wizard state ─────────────────────────────────────────────────────────
@@ -262,6 +271,14 @@ export default function WorkspacePage() {
                             className="w-full text-left px-3 py-2 rounded-xl text-sm text-muted-foreground hover:text-foreground hover:bg-white/[0.04] transition-colors"
                           >
                             View history
+                          </button>
+                        </div>
+                        <div className="p-1.5 border-t border-border/40">
+                          <button
+                            onClick={handleSwitchUser}
+                            className="w-full text-left px-3 py-2 rounded-xl text-sm text-rose-400/80 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
+                          >
+                            Sign out / Switch user
                           </button>
                         </div>
                       </>
