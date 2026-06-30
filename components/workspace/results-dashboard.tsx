@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
-import type { AnalysisResult } from '@/lib/analysis-schema'
+import type { AnalysisResult, RecruiterFeedback } from '@/lib/analysis-schema'
 import { RECOMMENDATION_META } from '@/lib/analysis-schema'
 import { CandidateCard } from './candidate-card'
 import { Button } from '@/components/ui/button'
@@ -12,9 +12,10 @@ interface ResultsDashboardProps {
   results: AnalysisResult[]
   jobTitle?: string
   onBack: () => void
+  onUpdateFeedback?: (resultId: string, feedback: RecruiterFeedback) => void
 }
 
-export function ResultsDashboard({ results, jobTitle = '', onBack }: ResultsDashboardProps) {
+export function ResultsDashboard({ results, jobTitle = '', onBack, onUpdateFeedback }: ResultsDashboardProps) {
   const successfulResults = results.filter(
     (r): r is Extract<AnalysisResult, { status: 'ok' }> => r.status === 'ok'
   )
@@ -171,7 +172,11 @@ export function ResultsDashboard({ results, jobTitle = '', onBack }: ResultsDash
                   exit={{ opacity: 0, x: -16 }}
                   transition={{ duration: 0.25, ease: 'easeOut' }}
                 >
-                  <CandidateCard result={selectedResult} jobTitle={jobTitle} />
+                  <CandidateCard 
+                    result={selectedResult} 
+                    jobTitle={jobTitle} 
+                    onUpdateFeedback={(feedback) => onUpdateFeedback?.(selectedResult.id, feedback)}
+                  />
                 </motion.div>
               )}
             </AnimatePresence>

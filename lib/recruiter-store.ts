@@ -78,6 +78,15 @@ export function saveSession(session: Omit<AnalysisSession, 'id' | 'date'>): Anal
   return newSession
 }
 
+export function updateSession(id: string, updates: Partial<AnalysisSession>): void {
+  const all = getAllSessions()
+  const index = all.findIndex((s) => s.id === id)
+  if (index !== -1) {
+    all[index] = { ...all[index], ...updates }
+    set(SESSIONS_KEY, all)
+  }
+}
+
 export function deleteSession(id: string): void {
   const all = getAllSessions().filter((s) => s.id !== id)
   set(SESSIONS_KEY, all)

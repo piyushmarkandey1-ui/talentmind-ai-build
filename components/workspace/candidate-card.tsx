@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'motion/react'
-import type { AnalysisResult } from '@/lib/analysis-schema'
+import type { AnalysisResult, RecruiterFeedback } from '@/lib/analysis-schema'
 import { DIMENSIONS, RECOMMENDATION_META } from '@/lib/analysis-schema'
 import { generateReportHTML } from '@/lib/generate-report'
 import {
@@ -13,6 +13,7 @@ import {
   MessageSquare,
   Lightbulb,
   Download,
+  ClipboardEdit,
 } from 'lucide-react'
 import { useState } from 'react'
 
@@ -21,15 +22,30 @@ type OkResult = Extract<AnalysisResult, { status: 'ok' }>
 export function CandidateCard({
   result,
   jobTitle = '',
+  onUpdateFeedback,
 }: {
   result: OkResult
   jobTitle?: string
+  onUpdateFeedback?: (feedback: RecruiterFeedback) => void
 }) {
   const [exporting, setExporting] = useState(false)
+  const [feedbackNotes, setFeedbackNotes] = useState(result.feedback?.notes ?? '')
+  const [decision, setDecision] = useState<'yes' | 'no' | 'hold' | null>(result.feedback?.decision ?? null)
+
+  const handleDecision = (d: 'yes' | 'no' | 'hold' | null) => {
+    setDecision(d)
+    onUpdateFeedback?.({ decision: d, notes: feedbackNotes })
+  }
+
+  const handleNotesBlur = () => {
+    if (feedbackNotes !== (result.feedback?.notes ?? '')) {
+      onUpdateFeedback?.({ decision, notes: feedbackNotes })
+    }
+  }
 
   const handleExport = () => {
     setExporting(true)
-    const html = generateReportHTML(result.analysis, result.fileName, jobTitle)
+    const html = generateReportHTML(result.analysis, result.fileName, jobTitle, result.feedback)
     const blob = new Blob([html], { type: 'text/html' })
     const url = URL.createObjectURL(blob)
     const win = window.open(url, '_blank')
@@ -257,6 +273,46 @@ export function CandidateCard({
           </ul>
         </div>
       )}
+
+      {/* Recruiter Feedback */}
+      <div className="flex flex-col gap-4 p-5 rounded-2xl border border-white/10 bg-white/[0.03] z-10 mt-2">
+        <div className="flex items-center justify-between">
+          <h3 className="text-xs font-medium text-foreground/90 flex items-center gap-2 uppercase tracking-wider">
+            <ClipboardEdit className="size-3.5" />
+            Recruiter Feedback
+          </h3>
+          
+          {/* Decision toggles */}
+          <div className="flex items-center gap-2 p-1 rounded-lg bg-black/40 border border-white/5">
+            <button
+              onClick={() => handleDecision(decision === 'yes' ? null : 'yes')}
+              className={['px-3 py-1 rounded-md text-[11px] font-medium transition-all', decision === 'yes' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'text-muted-foreground hover:text-foreground border border-transparent'].join(' ')}
+            >
+              Selected
+            </button>
+            <button
+              onClick={() => handleDecision(decision === 'hold' ? null : 'hold')}
+              className={['px-3 py-1 rounded-md text-[11px] font-medium transition-all', decision === 'hold' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'text-muted-foreground hover:text-foreground border border-transparent'].join(' ')}
+            >
+              Hold
+            </button>
+            <button
+              onClick={() => handleDecision(decision === 'no' ? null : 'no')}
+              className={['px-3 py-1 rounded-md text-[11px] font-medium transition-all', decision === 'no' ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' : 'text-muted-foreground hover:text-foreground border border-transparent'].join(' ')}
+            >
+              Rejected
+            </button>
+          </div>
+        </div>
+
+        <textarea
+          value={feedbackNotes}
+          onChange={(e) => setFeedbackNotes(e.target.value)}
+          onBlur={handleNotesBlur}
+          placeholder="Add your private notes about this candidate... (Auto-saves to your history)"
+          className="w-full min-h-[100px] bg-black/20 border border-white/5 rounded-xl p-3 text-sm text-foreground/90 placeholder:text-muted-foreground/40 resize-y focus:outline-none focus:border-white/20 transition-colors"
+        />
+      </div>
     </div>
   )
 }

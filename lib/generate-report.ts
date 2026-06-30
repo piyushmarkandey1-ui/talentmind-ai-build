@@ -20,7 +20,8 @@ function tag(text: string, color: string, bg: string, border: string): string {
 export function generateReportHTML(
   analysis: CandidateAnalysis,
   fileName: string,
-  jobTitle: string
+  jobTitle: string,
+  feedback?: { decision: 'yes' | 'no' | 'hold' | null; notes: string }
 ): string {
   const meta = RECOMMENDATION_META[analysis.recommendation]
   const toneMap: Record<string, { color: string; bg: string; border: string }> = {
@@ -223,6 +224,25 @@ export function generateReportHTML(
           <span class="q-num">Q${i + 1}</span>
           <span class="q-text">${q}</span>
         </div>`).join('')}
+    </div>
+  </div>` : ''}
+
+  <!-- Recruiter Feedback -->
+  ${feedback && (feedback.decision || feedback.notes.trim()) ? `
+  <div class="section">
+    <div class="section-title">📝 Recruiter Feedback</div>
+    <div class="box box-neutral" style="background:rgba(255,255,255,0.04);">
+      ${feedback.decision ? `
+      <div style="margin-bottom:12px;">
+        <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,0.5);">Final Decision: </span>
+        <span style="font-size:12px;font-weight:700;padding:4px 12px;border-radius:99px;${
+          feedback.decision === 'yes' ? 'background:rgba(16,185,129,0.15);color:#10b981;border:1px solid rgba(16,185,129,0.3);' :
+          feedback.decision === 'hold' ? 'background:rgba(245,158,11,0.15);color:#f59e0b;border:1px solid rgba(245,158,11,0.3);' :
+          'background:rgba(239,68,68,0.15);color:#ef4444;border:1px solid rgba(239,68,68,0.3);'
+        }">${feedback.decision.toUpperCase()}</span>
+      </div>` : ''}
+      ${feedback.notes.trim() ? `
+      <div style="font-size:13px;line-height:1.6;color:rgba(255,255,255,0.85);white-space:pre-wrap;">${feedback.notes}</div>` : ''}
     </div>
   </div>` : ''}
 

@@ -67,8 +67,13 @@ export const analysisSchema = z.object({
 
 export type CandidateAnalysis = z.infer<typeof analysisSchema>
 
+export type RecruiterFeedback = {
+  decision: 'yes' | 'no' | 'hold' | null
+  notes: string
+}
+
 export type AnalysisResult =
-  | { id: string; fileName: string; status: 'ok'; analysis: CandidateAnalysis }
+  | { id: string; fileName: string; status: 'ok'; analysis: CandidateAnalysis; feedback?: RecruiterFeedback }
   | { id: string; fileName: string; status: 'error'; error: string }
 
 export const RECOMMENDATION_META: Record<

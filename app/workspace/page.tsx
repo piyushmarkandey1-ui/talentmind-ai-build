@@ -11,11 +11,12 @@ import { Stepper, type Step } from '@/components/workspace/stepper'
 import { RecruiterModal } from '@/components/workspace/recruiter-modal'
 import { HistoryPanel } from '@/components/workspace/history-panel'
 import type { JobDescription, ResumeFile } from '@/lib/workspace'
-import { type AnalysisResult } from '@/lib/analysis-schema'
+import { type AnalysisResult, type RecruiterFeedback } from '@/lib/analysis-schema'
 import {
   getProfile,
   saveProfile,
   saveSession,
+  updateSession,
   type RecruiterProfile,
   type AnalysisSession,
 } from '@/lib/recruiter-store'
@@ -86,6 +87,7 @@ export default function WorkspacePage() {
   const [progress,       setProgress]       = useState({ done: 0, total: 0 })
   const [results,        setResults]        = useState<AnalysisResult[] | null>(null)
   const [analysisError,  setAnalysisError]  = useState<string | null>(null)
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null)
 
   const canContinue = useMemo(() => {
     if (current === 0) return job.title.trim() !== '' && job.content.trim().length > 40
@@ -136,21 +138,33 @@ export default function WorkspacePage() {
 
     // Auto-save session linked to recruiter's email
     if (profile) {
-      saveSession({
+      const session = saveSession({
         recruiterEmail: profile.email,
         jobTitle:       job.title,
         jobContent:     job.content,
         results:        newResults,
       })
+      setCurrentSessionId(session.id)
     }
 
     setResults(newResults)
+  }
+
+  // ── Feedback ─────────────────────────────────────────────────────────────
+  const handleUpdateFeedback = (resultId: string, feedback: RecruiterFeedback) => {
+    if (!results) return
+    const updated = results.map(r => r.id === resultId && r.status === 'ok' ? { ...r, feedback } : r)
+    setResults(updated)
+    if (currentSessionId) {
+      updateSession(currentSessionId, { results: updated })
+    }
   }
 
   // ── Restore a saved session ──────────────────────────────────────────────
   const handleRestoreSession = (session: AnalysisSession) => {
     setJob({ title: session.jobTitle, content: session.jobContent, source: 'paste' })
     setResults(session.results as AnalysisResult[])
+    setCurrentSessionId(session.id)
     setCurrent(0)
     setResumes([])
   }
@@ -159,6 +173,7 @@ export default function WorkspacePage() {
   const resetAll = () => {
     setResults(null)
     setAnalysisError(null)
+    setCurrentSessionId(null)
     setProgress({ done: 0, total: 0 })
     setCurrent(0)
     setJob({ title: '', content: '', source: 'paste' })
@@ -291,7 +306,12 @@ export default function WorkspacePage() {
         {TopBar}
         {Overlays}
         <div className="mx-auto w-full max-w-5xl px-4 pb-20 pt-10">
-          <ResultsDashboard results={results} jobTitle={job.title} onBack={resetAll} />
+          <ResultsDashboard 
+            results={results} 
+            jobTitle={job.title} 
+            onBack={resetAll} 
+            onUpdateFeedback={handleUpdateFeedback}
+          />
         </div>
       </main>
     )
