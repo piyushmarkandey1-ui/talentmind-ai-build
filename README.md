@@ -257,7 +257,4 @@ Environment variables needed in Vercel:
 - **Audit logging** for all data changes
 - **Session persistence** with automatic token refresh
 - **Input validation** on all file uploads
-
----
-
-*Built with ❤️ by Piyush Markandey*
+- **Session hijacking mitigation** via secure cookies
