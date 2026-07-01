@@ -221,24 +221,9 @@ export function AuthModal({ open, onClose, onSuccess, initialMode = 'login' }: A
 
                 {mode !== 'forgot_password' && (
                   <div>
-                    <div className="flex justify-between items-center mb-2">
-                      <label className={cn('text-sm font-medium', isLight ? 'text-gray-700' : '')}>
-                        {mode === 'update_password' ? 'New Password' : 'Password'}
-                      </label>
-                      {mode === 'login' && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setMode('forgot_password')
-                            setError('')
-                            setSuccessMsg('')
-                          }}
-                          className={cn('text-xs hover:underline', isLight ? 'text-blue-600' : 'text-blue-400')}
-                        >
-                          Forgot password?
-                        </button>
-                      )}
-                    </div>
+                    <label className={cn('mb-2 block text-sm font-medium', isLight ? 'text-gray-700' : '')}>
+                      {mode === 'update_password' ? 'New Password' : 'Password'}
+                    </label>
                     <div className="relative">
                       <Lock className={cn('absolute left-3 top-1/2 size-4 -translate-y-1/2', isLight ? 'text-gray-400' : 'text-muted-foreground')} />
                       <input
@@ -266,6 +251,21 @@ export function AuthModal({ open, onClose, onSuccess, initialMode = 'login' }: A
                         {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                       </button>
                     </div>
+                    {mode === 'login' && (
+                      <div className="mt-2 text-right">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setMode('forgot_password')
+                            setError('')
+                            setSuccessMsg('')
+                          }}
+                          className={cn('text-xs hover:underline', isLight ? 'text-blue-600' : 'text-blue-400')}
+                        >
+                          Forgot password?
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
 
