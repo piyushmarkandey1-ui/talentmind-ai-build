@@ -19,9 +19,14 @@ export const ACCEPTED_RESUME_TYPES = [
   'application/msword', // .doc
   'text/plain',
   'application/json', // .json
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/heic',
+  'image/pjpeg', // Added pjpeg as explicitly requested
 ]
 
-export const ACCEPTED_RESUME_EXT = '.pdf,.docx,.doc,.txt,.json'
+export const ACCEPTED_RESUME_EXT = '.pdf,.docx,.doc,.txt,.json,.jpg,.jpeg,.png,.webp,.heic,.pjpeg'
 
 export const MAX_RESUME_SIZE = 10 * 1024 * 1024 // 10MB
 
@@ -42,6 +47,6 @@ export function isAcceptedResume(file: File): boolean {
   const ext = fileExtension(file.name)
   return (
     ACCEPTED_RESUME_TYPES.includes(file.type) ||
-    ['.pdf', '.docx', '.doc', '.txt', '.json'].includes(ext)
+    ['.pdf', '.docx', '.doc', '.txt', '.json', '.jpg', '.jpeg', '.png', '.webp', '.heic', '.pjpeg'].includes(ext)
   )
 }

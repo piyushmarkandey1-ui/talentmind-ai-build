@@ -51,6 +51,7 @@ export default function WorkspacePage() {
   const [profile, setProfile]               = useState<RecruiterProfile | null>(null)
   const [profileLoaded, setProfileLoaded]   = useState(false)
   const [showAuthModal, setShowAuthModal] = useState(false)
+  const [authModalMode, setAuthModalMode] = useState<'login' | 'signup' | 'forgot_password' | 'update_password'>('login')
   const [showHistoryPanel, setShowHistoryPanel] = useState(false)
   const [profileMenuOpen, setProfileMenuOpen]   = useState(false)
   const profileMenuRef = useRef<HTMLDivElement>(null)
@@ -58,6 +59,9 @@ export default function WorkspacePage() {
   // Load profile from Supabase on mount
   useEffect(() => {
     async function loadProfile() {
+      const params = new URLSearchParams(window.location.search)
+      const isReset = params.get('reset') === 'true'
+
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
         const saved = await getCachedProfile(user.id)
@@ -69,6 +73,14 @@ export default function WorkspacePage() {
             company: '',
             designation: '',
           })
+          if (isReset) {
+            setAuthModalMode('update_password')
+            setShowAuthModal(true)
+            window.history.replaceState({}, '', window.location.pathname)
+          } else {
+            // Auto-show history panel when they land on the page if they're logged in
+            setShowHistoryPanel(true)
+          }
         }
       } else {
         setShowAuthModal(true)
@@ -104,6 +116,7 @@ export default function WorkspacePage() {
       }
     }
     setShowAuthModal(false)
+    setShowHistoryPanel(true)
   }
 
   const handleSwitchUser = async () => {
@@ -126,6 +139,7 @@ export default function WorkspacePage() {
   const [results,        setResults]        = useState<AnalysisResult[] | null>(null)
   const [analysisError,  setAnalysisError]  = useState<string | null>(null)
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null)
+  const [historyRefreshKey, setHistoryRefreshKey] = useState(0)
 
   const canContinue = useMemo(() => {
     if (current === 0) return job.title.trim() !== '' && job.content.trim().length > 40
@@ -174,21 +188,49 @@ export default function WorkspacePage() {
       return
     }
 
-    // Auto-save session linked to recruiter's email
-    if (profile) {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
+    setResults(newResults)
+
+    // Auto-save the session
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user && profile) {
+      try {
         const session = await saveSession(user.id, {
           recruiter_email: profile.email,
-          job_title:       job.title,
-          job_content:     job.content,
-          results:        newResults,
+          job_title: job.title,
+          job_content: job.content,
+          results: newResults,
         })
         setCurrentSessionId(session.id || '')
+      } catch (err) {
+        console.error("Auto-save error:", err)
       }
     }
+  }
 
-    setResults(newResults)
+  // ── Save Session ─────────────────────────────────────────────────────────
+  const handleSaveSession = async () => {
+    if (!profile || !results) return
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      setShowAuthModal(true)
+      return
+    }
+    
+    try {
+      const session = await saveSession(user.id, {
+        recruiter_email: profile.email,
+        job_title:       job.title,
+        job_content:     job.content,
+        results:        results,
+      })
+      setCurrentSessionId(session.id || '')
+      // Refresh history panel so the saved session appears immediately
+      setHistoryRefreshKey(k => k + 1)
+      setShowHistoryPanel(true)
+    } catch (err: any) {
+      console.error('[workspace] Save session failed:', err)
+      alert(`Failed to save session: ${err.message || err}`)
+    }
   }
 
   // ── Feedback ─────────────────────────────────────────────────────────────
@@ -374,6 +416,7 @@ export default function WorkspacePage() {
         open={showAuthModal}
         onClose={() => setShowAuthModal(false)}
         onSuccess={handleAuthSuccess}
+        initialMode={authModalMode}
       />
       {profile && (
         <HistoryPanel
@@ -381,6 +424,7 @@ export default function WorkspacePage() {
           onClose={() => setShowHistoryPanel(false)}
           profile={profile}
           onRestoreSession={handleRestoreSession}
+          refreshKey={historyRefreshKey}
         />
       )}
     </>
@@ -400,6 +444,8 @@ export default function WorkspacePage() {
             onBack={resetAll} 
             onUpdateFeedback={handleUpdateFeedback}
             onDeleteResult={handleDeleteResult}
+            onSaveSession={handleSaveSession}
+            isSaved={!!currentSessionId}
           />
         </div>
       </main>
@@ -472,7 +518,7 @@ export default function WorkspacePage() {
           </h1>
           <p className="text-pretty text-muted-foreground">
             Define the role, add resumes, and TalentMind ranks every candidate with explainable, evidence-backed scores.
-            {profile && ' Results are auto-saved to your history.'}
+            {profile && ' Save your favorite analyses to history.'}
           </p>
         </div>
 

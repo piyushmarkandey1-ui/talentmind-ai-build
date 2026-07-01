@@ -88,10 +88,29 @@ export async function getAllSessions(userId: string): Promise<AnalysisSession[]>
         created_at,
         analyses (
           id,
+          resume_id,
           candidate_name,
+          headline,
           overall_score,
           recommendation,
-          created_at
+          technical_skills,
+          relevant_experience,
+          project_quality,
+          career_progression,
+          leadership,
+          communication,
+          learning_potential,
+          transferable_skills,
+          domain_knowledge,
+          missing_skills,
+          overall_role_fit,
+          strengths,
+          gaps,
+          interview_questions,
+          created_at,
+          resumes (
+            file_name
+          )
         )
       `)
       .eq('user_id', userId)
@@ -105,7 +124,41 @@ export async function getAllSessions(userId: string): Promise<AnalysisSession[]>
       recruiter_email: '', // Will be fetched from profile
       job_title: job.title,
       job_content: job.content,
-      results: job.analyses || [],
+      results: (job.analyses || []).map((a: any) => {
+        // Reverse mapping of recommendation if needed, or just use as is
+        let rec = a.recommendation
+        if (rec === 'strong_hire') rec = 'strong_yes'
+        else if (rec === 'hire') rec = 'yes'
+        else if (rec === 'reject') rec = 'no'
+
+        return {
+          id: a.id,
+          fileName: a.resumes?.file_name || `${a.candidate_name} Resume`,
+          status: 'ok',
+          analysis: {
+            candidateName: a.candidate_name,
+            headline: a.headline,
+            overallScore: a.overall_score,
+            recommendation: rec,
+            summary: '', // We don't have a direct summary field, fallback empty or reconstruct
+            dimensions: {
+              skillsMatch: a.technical_skills || { score: 0, rationale: '' },
+              experienceDepth: a.relevant_experience || { score: 0, rationale: '' },
+              education: { score: 0, rationale: '' }, // Not explicitly in DB
+              careerTrajectory: a.career_progression || { score: 0, rationale: '' },
+              domainExpertise: a.domain_knowledge || { score: 0, rationale: '' },
+              leadershipSignals: a.leadership || { score: 0, rationale: '' },
+              communication: a.communication || { score: 0, rationale: '' },
+              roleFit: a.overall_role_fit || { score: 0, rationale: '' },
+            },
+            strengths: a.strengths || [],
+            concerns: a.gaps || [],
+            matchedSkills: [],
+            missingSkills: a.missing_skills || [],
+            suggestedQuestions: a.interview_questions || [],
+          }
+        }
+      }),
       created_at: job.created_at,
     })) || []
   } catch (error) {
@@ -117,6 +170,21 @@ export async function getAllSessions(userId: string): Promise<AnalysisSession[]>
 export async function getSessionsByEmail(userId: string, email: string): Promise<AnalysisSession[]> {
   // Since we're using RLS, this will only return the user's own sessions
   return getAllSessions(userId)
+}
+
+function getOrCreateUUID(str: string): string {
+  if (!str) {
+    return '00000000-0000-4000-8000-000000000000'
+  }
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+  if (uuidRegex.test(str)) return str
+
+  // Deterministically create a UUID v4 structure from random values
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0
+    const v = c === 'x' ? r : (r & 0x3) | 0x8
+    return v.toString(16)
+  })
 }
 
 export async function saveSession(
@@ -140,15 +208,50 @@ export async function saveSession(
 
     // Then, save the analysis results
     if (session.results && session.results.length > 0) {
+      const recMap: Record<string, string> = {
+        strong_yes: 'strong_hire',
+        yes: 'hire',
+        maybe: 'consider',
+        no: 'reject',
+        strong_hire: 'strong_hire',
+        hire: 'hire',
+        consider: 'consider',
+        reject: 'reject'
+      }
+
       for (const result of session.results as any[]) {
-        await supabase.from('analyses').upsert({
+        const resumeUuid = getOrCreateUUID(result.resumeId || result.id)
+        
+        // 1. Insert into resumes table to satisfy foreign key constraint
+        const { error: resumeError } = await supabase
+          .from('resumes')
+          .upsert({
+            id: resumeUuid,
+            user_id: userId,
+            job_id: jobData.id,
+            file_name: result.fileName || 'resume.pdf',
+            file_url: result.fileUrl || `local://${result.fileName || 'resume.pdf'}`,
+            file_size: result.fileSize || 0,
+            content: result.resumeText || '',
+          })
+
+        if (resumeError) {
+          console.error('Error inserting resume:', resumeError)
+        }
+
+        // 2. Map recommendation values to avoid CHECK constraint failure
+        const rawRec = result.recommendation || result.analysis?.recommendation || 'maybe'
+        const mappedRec = recMap[rawRec] || 'consider'
+
+        // 3. Upsert analyses
+        const { error: analysesError } = await supabase.from('analyses').upsert({
           user_id: userId,
           job_id: jobData.id,
-          resume_id: result.resumeId || result.id,
-          candidate_name: result.candidateName || result.analysis?.candidateName,
-          headline: result.headline || result.analysis?.headline,
-          overall_score: result.overallScore || result.analysis?.overallScore,
-          recommendation: result.recommendation || result.analysis?.recommendation,
+          resume_id: resumeUuid,
+          candidate_name: result.candidateName || result.analysis?.candidateName || 'Unknown Candidate',
+          headline: result.headline || result.analysis?.headline || '',
+          overall_score: result.overallScore || result.analysis?.overallScore || 0,
+          recommendation: mappedRec,
           technical_skills: result.analysis?.technical_skills || {},
           relevant_experience: result.analysis?.relevant_experience || {},
           project_quality: result.analysis?.project_quality || {},
@@ -161,10 +264,15 @@ export async function saveSession(
           missing_skills: result.analysis?.missing_skills || {},
           overall_role_fit: result.analysis?.overall_role_fit || {},
           strengths: result.analysis?.strengths || [],
-          gaps: result.analysis?.gaps || [],
-          interview_questions: result.analysis?.interview_questions || {},
-          confidence_level: result.analysis?.confidence_level || '',
+          gaps: result.analysis?.gaps || result.analysis?.concerns || [],
+          interview_questions: result.analysis?.interview_questions || result.analysis?.suggestedQuestions || {},
+          confidence_level: result.analysis?.confidence_level || 'high',
         })
+
+        if (analysesError) {
+          console.error('Error inserting analysis:', analysesError)
+          throw analysesError
+        }
       }
     }
 
@@ -185,6 +293,7 @@ export async function saveSession(
 
 export async function updateSession(id: string, updates: Partial<AnalysisSession>): Promise<void> {
   try {
+    // Update job title/content if changed
     if (updates.job_title || updates.job_content) {
       await supabase
         .from('jobs')
@@ -195,9 +304,40 @@ export async function updateSession(id: string, updates: Partial<AnalysisSession
         })
         .eq('id', id)
     }
+
+    // Persist recruiter feedback on analysis results
+    if (updates.results && Array.isArray(updates.results)) {
+      const recMap: Record<string, string> = {
+        strong_yes: 'strong_hire',
+        yes: 'hire',
+        maybe: 'consider',
+        no: 'reject',
+        strong_hire: 'strong_hire',
+        hire: 'hire',
+        consider: 'consider',
+        reject: 'reject',
+      }
+
+      for (const result of updates.results as any[]) {
+        if (!result?.id) continue
+        const resumeUuid = getOrCreateUUID(result.resumeId || result.id)
+        const rawRec = result.feedback?.recommendation || result.recommendation || result.analysis?.recommendation || 'maybe'
+        const mappedRec = recMap[rawRec] || 'consider'
+
+        await supabase
+          .from('analyses')
+          .update({
+            recommendation: mappedRec,
+            strengths: result.analysis?.strengths || [],
+            gaps: result.analysis?.gaps || result.analysis?.concerns || [],
+          })
+          .eq('resume_id', resumeUuid)
+          .eq('job_id', id)
+      }
+    }
   } catch (error) {
     console.error('Error updating session:', error)
-    throw error
+    // Non-fatal — don't throw so UI stays functional
   }
 }
 

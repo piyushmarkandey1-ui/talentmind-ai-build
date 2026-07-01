@@ -3,13 +3,13 @@
 > **AI-Powered Resume Analysis & Candidate Ranking**  
 > Turning stacks of resumes into a ranked, explainable shortlist in minutes — powered by Google Gemini.
 
+**Built by:** Piyush Markandey & Anish Kumar
+
 ---
 
 ## 🔗 Live Demo
 
 **[https://talentmind-ai-build.vercel.app](https://talentmind-ai-build.vercel.app)**
-
-**GitHub:** [https://github.com/piyushmarkandey1-ui/talentmind-ai-build](https://github.com/piyushmarkandey1-ui/talentmind-ai-build)
 
 ---
 
@@ -131,8 +131,8 @@ cd talentmind-ai-build
 npm install
 
 # 3. Set up environment variables
-# Copy .env.example to .env.local and fill in your values
-cp .env.example .env.local
+# Copy example.env to .env and fill in your values
+cp example.env .env
 
 # 4. Set up Supabase
 # Create a new project at https://supabase.com/dashboard
@@ -265,7 +265,4 @@ Environment variables needed in Vercel:
 - **Audit logging** for all data changes
 - **Session persistence** with automatic token refresh
 - **Input validation** on all file uploads
-
----
-
-*Built with ❤️ by Piyush Markandey*
+- **Session hijacking mitigation** via secure cookies

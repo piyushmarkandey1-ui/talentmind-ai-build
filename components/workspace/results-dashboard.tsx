@@ -6,7 +6,7 @@ import type { AnalysisResult, RecruiterFeedback } from '@/lib/analysis-schema'
 import { RECOMMENDATION_META } from '@/lib/analysis-schema'
 import { CandidateCard } from './candidate-card'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, Trophy, Users, AlertCircle } from 'lucide-react'
+import { ArrowLeft, Trophy, Users, AlertCircle, Save, Check, Loader2 } from 'lucide-react'
 import { useTheme } from '@/components/site/theme-provider'
 import { cn } from '@/lib/utils'
 
@@ -16,9 +16,11 @@ interface ResultsDashboardProps {
   onBack: () => void
   onUpdateFeedback?: (resultId: string, feedback: RecruiterFeedback) => void
   onDeleteResult?: (resultId: string) => void
+  onSaveSession?: () => Promise<void>
+  isSaved?: boolean
 }
 
-export function ResultsDashboard({ results, jobTitle = '', onBack, onUpdateFeedback, onDeleteResult }: ResultsDashboardProps) {
+export function ResultsDashboard({ results, jobTitle = '', onBack, onUpdateFeedback, onDeleteResult, onSaveSession, isSaved = false }: ResultsDashboardProps) {
   const { theme } = useTheme()
   const isLight = theme === 'light'
 
@@ -33,6 +35,17 @@ export function ResultsDashboard({ results, jobTitle = '', onBack, onUpdateFeedb
 
   const [selectedId, setSelectedId] = useState<string>(ranked[0]?.id ?? '')
   const selectedResult = ranked.find((r) => r.id === selectedId) ?? ranked[0]
+  const [isSaving, setIsSaving] = useState(false)
+
+  const handleSaveClick = async () => {
+    if (!onSaveSession || isSaved || isSaving) return
+    setIsSaving(true)
+    try {
+      await onSaveSession()
+    } finally {
+      setIsSaving(false)
+    }
+  }
 
   return (
     <div className="w-full flex flex-col gap-8">
@@ -52,14 +65,37 @@ export function ResultsDashboard({ results, jobTitle = '', onBack, onUpdateFeedb
             )}
           </p>
         </div>
-        <Button
-          variant="ghost"
-          onClick={onBack}
-          className={cn(isLight ? 'text-gray-500 hover:text-gray-900 hover:bg-gray-100' : 'text-muted-foreground hover:text-foreground')}
-        >
-          <ArrowLeft className="size-4 mr-2" />
-          Start Over
-        </Button>
+        <div className="flex items-center gap-3">
+          <Button
+            variant="ghost"
+            onClick={onBack}
+            className={cn(isLight ? 'text-gray-500 hover:text-gray-900 hover:bg-gray-100' : 'text-muted-foreground hover:text-foreground')}
+          >
+            <ArrowLeft className="size-4 mr-2" />
+            Start Over
+          </Button>
+
+          {onSaveSession && (
+            <Button
+              onClick={handleSaveClick}
+              disabled={isSaved || isSaving}
+              className={cn(
+                'rounded-xl text-white font-medium shadow-sm transition-all',
+                isSaved 
+                  ? 'bg-emerald-500 hover:bg-emerald-600 disabled:opacity-100'
+                  : 'bg-gradient-to-r from-blue to-purple hover:opacity-90 shadow-blue/20'
+              )}
+            >
+              {isSaving ? (
+                <><Loader2 className="size-4 mr-2 animate-spin" /> Saving...</>
+              ) : isSaved ? (
+                <><Check className="size-4 mr-2" /> Saved to History</>
+              ) : (
+                <><Save className="size-4 mr-2" /> Save Results</>
+              )}
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Failed results banner */}

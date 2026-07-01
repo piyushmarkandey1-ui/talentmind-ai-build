@@ -30,6 +30,7 @@ interface HistoryPanelProps {
   onClose: () => void
   profile: RecruiterProfile
   onRestoreSession: (session: AnalysisSession) => void
+  refreshKey?: number
 }
 
 function ResultBadge({ result, isLight }: { result: AnalysisResult; isLight: boolean }) {
@@ -59,7 +60,7 @@ function ResultBadge({ result, isLight }: { result: AnalysisResult; isLight: boo
   )
 }
 
-export function HistoryPanel({ open, onClose, profile, onRestoreSession }: HistoryPanelProps) {
+export function HistoryPanel({ open, onClose, profile, onRestoreSession, refreshKey = 0 }: HistoryPanelProps) {
   const { theme } = useTheme()
   const isLight = theme === 'light'
 
@@ -67,7 +68,7 @@ export function HistoryPanel({ open, onClose, profile, onRestoreSession }: Histo
   const [loading, setLoading] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
 
-  // Load sessions from Supabase when panel opens
+  // Load sessions from Supabase when panel opens or refreshKey changes
   useEffect(() => {
     async function loadSessions() {
       const { data: { user } } = await supabase.auth.getUser()
@@ -79,7 +80,7 @@ export function HistoryPanel({ open, onClose, profile, onRestoreSession }: Histo
       }
     }
     if (open) loadSessions()
-  }, [open, profile.email])
+  }, [open, profile.email, refreshKey])
 
   const handleDelete = async (id: string) => {
     await deleteSession(id)
