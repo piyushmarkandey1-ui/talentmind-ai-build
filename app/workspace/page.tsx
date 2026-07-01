@@ -216,16 +216,21 @@ export default function WorkspacePage() {
       return
     }
     
-    const session = await saveSession(user.id, {
-      recruiter_email: profile.email,
-      job_title:       job.title,
-      job_content:     job.content,
-      results:        results,
-    })
-    setCurrentSessionId(session.id || '')
-    // Refresh history panel so the saved session appears immediately
-    setHistoryRefreshKey(k => k + 1)
-    setShowHistoryPanel(true)
+    try {
+      const session = await saveSession(user.id, {
+        recruiter_email: profile.email,
+        job_title:       job.title,
+        job_content:     job.content,
+        results:        results,
+      })
+      setCurrentSessionId(session.id || '')
+      // Refresh history panel so the saved session appears immediately
+      setHistoryRefreshKey(k => k + 1)
+      setShowHistoryPanel(true)
+    } catch (err: any) {
+      console.error('[workspace] Save session failed:', err)
+      alert(`Failed to save session: ${err.message || err}`)
+    }
   }
 
   // ── Feedback ─────────────────────────────────────────────────────────────
