@@ -11,8 +11,6 @@
 
 **[https://talentmind-ai-build.vercel.app](https://talentmind-ai-build.vercel.app)**
 
-**GitHub:** [https://github.com/piyushmarkandey1-ui/talentmind-ai-build](https://github.com/piyushmarkandey1-ui/talentmind-ai-build)
-
 ---
 
 ## What is TalentMind AI?
