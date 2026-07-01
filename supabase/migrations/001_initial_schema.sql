@@ -135,7 +135,10 @@ CREATE TRIGGER update_jobs_updated_at BEFORE UPDATE ON public.jobs
 
 -- Audit log trigger function
 CREATE OR REPLACE FUNCTION log_audit_changes()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER
+SECURITY DEFINER
+SET search_path = public
+AS $$
 BEGIN
   IF TG_OP = 'INSERT' THEN
     INSERT INTO public.audit_logs (user_id, action, table_name, record_id, new_values)

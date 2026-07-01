@@ -166,6 +166,16 @@ SESSION_SECRET=your_random_secret_key
 
 Get a free Gemini API key at: [https://aistudio.google.com/app/apikey](https://aistudio.google.com/app/apikey)
 
+### Important: Fix for Deployed Database
+
+If you have already deployed the migration and are experiencing audit log issues, run this SQL command in your Supabase Dashboard SQL Editor:
+
+```sql
+ALTER FUNCTION public.log_audit_changes() SECURITY DEFINER;
+```
+
+This ensures the audit log function has the correct permissions to write to the audit_logs table.
+
 ---
 
 ## Project Structure
