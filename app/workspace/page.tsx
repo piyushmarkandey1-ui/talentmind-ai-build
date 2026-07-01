@@ -183,26 +183,25 @@ export default function WorkspacePage() {
       return
     }
 
-    // Auto-save session linked to recruiter's email
-    if (profile) {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
-        try {
-          const session = await saveSession(user.id, {
-            recruiter_email: profile.email,
-            job_title:       job.title,
-            job_content:     job.content,
-            results:        newResults,
-          })
-          setCurrentSessionId(session.id || '')
-        } catch (dbErr) {
-          console.error('[workspace] Failed to auto-save session to Supabase:', dbErr)
-          // Do not throw! Let the recruiter view their results dashboard regardless of db sync success.
-        }
-      }
-    }
-
     setResults(newResults)
+  }
+
+  // ── Save Session ─────────────────────────────────────────────────────────
+  const handleSaveSession = async () => {
+    if (!profile || !results) return
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      setShowAuthModal(true)
+      return
+    }
+    
+    const session = await saveSession(user.id, {
+      recruiter_email: profile.email,
+      job_title:       job.title,
+      job_content:     job.content,
+      results:        results,
+    })
+    setCurrentSessionId(session.id || '')
   }
 
   // ── Feedback ─────────────────────────────────────────────────────────────
@@ -415,6 +414,8 @@ export default function WorkspacePage() {
             onBack={resetAll} 
             onUpdateFeedback={handleUpdateFeedback}
             onDeleteResult={handleDeleteResult}
+            onSaveSession={handleSaveSession}
+            isSaved={!!currentSessionId}
           />
         </div>
       </main>
@@ -487,7 +488,7 @@ export default function WorkspacePage() {
           </h1>
           <p className="text-pretty text-muted-foreground">
             Define the role, add resumes, and TalentMind ranks every candidate with explainable, evidence-backed scores.
-            {profile && ' Results are auto-saved to your history.'}
+            {profile && ' Save your favorite analyses to history.'}
           </p>
         </div>
 
