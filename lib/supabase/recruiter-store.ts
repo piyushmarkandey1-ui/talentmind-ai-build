@@ -240,6 +240,7 @@ export async function saveSession(
 
 export async function updateSession(id: string, updates: Partial<AnalysisSession>): Promise<void> {
   try {
+    // Update job title/content if changed
     if (updates.job_title || updates.job_content) {
       await supabase
         .from('jobs')
@@ -250,9 +251,40 @@ export async function updateSession(id: string, updates: Partial<AnalysisSession
         })
         .eq('id', id)
     }
+
+    // Persist recruiter feedback on analysis results
+    if (updates.results && Array.isArray(updates.results)) {
+      const recMap: Record<string, string> = {
+        strong_yes: 'strong_hire',
+        yes: 'hire',
+        maybe: 'consider',
+        no: 'reject',
+        strong_hire: 'strong_hire',
+        hire: 'hire',
+        consider: 'consider',
+        reject: 'reject',
+      }
+
+      for (const result of updates.results as any[]) {
+        if (!result?.id) continue
+        const resumeUuid = getOrCreateUUID(result.resumeId || result.id)
+        const rawRec = result.feedback?.recommendation || result.recommendation || result.analysis?.recommendation || 'maybe'
+        const mappedRec = recMap[rawRec] || 'consider'
+
+        await supabase
+          .from('analyses')
+          .update({
+            recommendation: mappedRec,
+            strengths: result.analysis?.strengths || [],
+            gaps: result.analysis?.gaps || result.analysis?.concerns || [],
+          })
+          .eq('resume_id', resumeUuid)
+          .eq('job_id', id)
+      }
+    }
   } catch (error) {
     console.error('Error updating session:', error)
-    throw error
+    // Non-fatal — don't throw so UI stays functional
   }
 }
 
