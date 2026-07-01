@@ -171,7 +171,7 @@ BEGIN
   END IF;
   RETURN NULL;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Apply audit log triggers
 CREATE TRIGGER audit_jobs AFTER INSERT OR UPDATE OR DELETE ON public.jobs
