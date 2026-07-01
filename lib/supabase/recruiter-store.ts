@@ -119,6 +119,21 @@ export async function getSessionsByEmail(userId: string, email: string): Promise
   return getAllSessions(userId)
 }
 
+function getOrCreateUUID(str: string): string {
+  if (!str) {
+    return '00000000-0000-4000-8000-000000000000'
+  }
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+  if (uuidRegex.test(str)) return str
+
+  // Deterministically create a UUID v4 structure from random values
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0
+    const v = c === 'x' ? r : (r & 0x3) | 0x8
+    return v.toString(16)
+  })
+}
+
 export async function saveSession(
   userId: string,
   session: Omit<AnalysisSession, 'id' | 'created_at' | 'user_id'>
@@ -140,15 +155,50 @@ export async function saveSession(
 
     // Then, save the analysis results
     if (session.results && session.results.length > 0) {
+      const recMap: Record<string, string> = {
+        strong_yes: 'strong_hire',
+        yes: 'hire',
+        maybe: 'consider',
+        no: 'reject',
+        strong_hire: 'strong_hire',
+        hire: 'hire',
+        consider: 'consider',
+        reject: 'reject'
+      }
+
       for (const result of session.results as any[]) {
-        await supabase.from('analyses').upsert({
+        const resumeUuid = getOrCreateUUID(result.resumeId || result.id)
+        
+        // 1. Insert into resumes table to satisfy foreign key constraint
+        const { error: resumeError } = await supabase
+          .from('resumes')
+          .upsert({
+            id: resumeUuid,
+            user_id: userId,
+            job_id: jobData.id,
+            file_name: result.fileName || 'resume.pdf',
+            file_url: result.fileUrl || `local://${result.fileName || 'resume.pdf'}`,
+            file_size: result.fileSize || 0,
+            content: result.resumeText || '',
+          })
+
+        if (resumeError) {
+          console.error('Error inserting resume:', resumeError)
+        }
+
+        // 2. Map recommendation values to avoid CHECK constraint failure
+        const rawRec = result.recommendation || result.analysis?.recommendation || 'maybe'
+        const mappedRec = recMap[rawRec] || 'consider'
+
+        // 3. Upsert analyses
+        const { error: analysesError } = await supabase.from('analyses').upsert({
           user_id: userId,
           job_id: jobData.id,
-          resume_id: result.resumeId || result.id,
-          candidate_name: result.candidateName || result.analysis?.candidateName,
-          headline: result.headline || result.analysis?.headline,
-          overall_score: result.overallScore || result.analysis?.overallScore,
-          recommendation: result.recommendation || result.analysis?.recommendation,
+          resume_id: resumeUuid,
+          candidate_name: result.candidateName || result.analysis?.candidateName || 'Unknown Candidate',
+          headline: result.headline || result.analysis?.headline || '',
+          overall_score: result.overallScore || result.analysis?.overallScore || 0,
+          recommendation: mappedRec,
           technical_skills: result.analysis?.technical_skills || {},
           relevant_experience: result.analysis?.relevant_experience || {},
           project_quality: result.analysis?.project_quality || {},
@@ -161,10 +211,15 @@ export async function saveSession(
           missing_skills: result.analysis?.missing_skills || {},
           overall_role_fit: result.analysis?.overall_role_fit || {},
           strengths: result.analysis?.strengths || [],
-          gaps: result.analysis?.gaps || [],
-          interview_questions: result.analysis?.interview_questions || {},
-          confidence_level: result.analysis?.confidence_level || '',
+          gaps: result.analysis?.gaps || result.analysis?.concerns || [],
+          interview_questions: result.analysis?.interview_questions || result.analysis?.suggestedQuestions || {},
+          confidence_level: result.analysis?.confidence_level || 'high',
         })
+
+        if (analysesError) {
+          console.error('Error inserting analysis:', analysesError)
+          throw analysesError
+        }
       }
     }
 

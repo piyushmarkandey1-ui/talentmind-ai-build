@@ -187,13 +187,18 @@ export default function WorkspacePage() {
     if (profile) {
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
-        const session = await saveSession(user.id, {
-          recruiter_email: profile.email,
-          job_title:       job.title,
-          job_content:     job.content,
-          results:        newResults,
-        })
-        setCurrentSessionId(session.id || '')
+        try {
+          const session = await saveSession(user.id, {
+            recruiter_email: profile.email,
+            job_title:       job.title,
+            job_content:     job.content,
+            results:        newResults,
+          })
+          setCurrentSessionId(session.id || '')
+        } catch (dbErr) {
+          console.error('[workspace] Failed to auto-save session to Supabase:', dbErr)
+          // Do not throw! Let the recruiter view their results dashboard regardless of db sync success.
+        }
       }
     }
 
