@@ -131,8 +131,8 @@ cd talentmind-ai-build
 npm install
 
 # 3. Set up environment variables
-# Copy .env.example to .env.local and fill in your values
-cp .env.example .env.local
+# Copy example.env to .env and fill in your values
+cp example.env .env
 
 # 4. Set up Supabase
 # Create a new project at https://supabase.com/dashboard
