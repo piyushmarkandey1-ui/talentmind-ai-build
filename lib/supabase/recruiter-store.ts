@@ -88,10 +88,29 @@ export async function getAllSessions(userId: string): Promise<AnalysisSession[]>
         created_at,
         analyses (
           id,
+          resume_id,
           candidate_name,
+          headline,
           overall_score,
           recommendation,
-          created_at
+          technical_skills,
+          relevant_experience,
+          project_quality,
+          career_progression,
+          leadership,
+          communication,
+          learning_potential,
+          transferable_skills,
+          domain_knowledge,
+          missing_skills,
+          overall_role_fit,
+          strengths,
+          gaps,
+          interview_questions,
+          created_at,
+          resumes (
+            file_name
+          )
         )
       `)
       .eq('user_id', userId)
@@ -105,7 +124,41 @@ export async function getAllSessions(userId: string): Promise<AnalysisSession[]>
       recruiter_email: '', // Will be fetched from profile
       job_title: job.title,
       job_content: job.content,
-      results: job.analyses || [],
+      results: (job.analyses || []).map((a: any) => {
+        // Reverse mapping of recommendation if needed, or just use as is
+        let rec = a.recommendation
+        if (rec === 'strong_hire') rec = 'strong_yes'
+        else if (rec === 'hire') rec = 'yes'
+        else if (rec === 'reject') rec = 'no'
+
+        return {
+          id: a.id,
+          fileName: a.resumes?.file_name || `${a.candidate_name} Resume`,
+          status: 'ok',
+          analysis: {
+            candidateName: a.candidate_name,
+            headline: a.headline,
+            overallScore: a.overall_score,
+            recommendation: rec,
+            summary: '', // We don't have a direct summary field, fallback empty or reconstruct
+            dimensions: {
+              skillsMatch: a.technical_skills || { score: 0, rationale: '' },
+              experienceDepth: a.relevant_experience || { score: 0, rationale: '' },
+              education: { score: 0, rationale: '' }, // Not explicitly in DB
+              careerTrajectory: a.career_progression || { score: 0, rationale: '' },
+              domainExpertise: a.domain_knowledge || { score: 0, rationale: '' },
+              leadershipSignals: a.leadership || { score: 0, rationale: '' },
+              communication: a.communication || { score: 0, rationale: '' },
+              roleFit: a.overall_role_fit || { score: 0, rationale: '' },
+            },
+            strengths: a.strengths || [],
+            concerns: a.gaps || [],
+            matchedSkills: [],
+            missingSkills: a.missing_skills || [],
+            suggestedQuestions: a.interview_questions || [],
+          }
+        }
+      }),
       created_at: job.created_at,
     })) || []
   } catch (error) {

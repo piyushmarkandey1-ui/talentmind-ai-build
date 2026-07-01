@@ -10,7 +10,7 @@ import {
   fileExtension,
 } from '@/lib/workspace'
 import { AnimatePresence, motion } from 'motion/react'
-import { FileText, Trash2, UploadCloud, AlertCircle } from 'lucide-react'
+import { FileText, Image, Trash2, UploadCloud, AlertCircle } from 'lucide-react'
 import { useRef, useState } from 'react'
 
 function makeId() {
@@ -114,7 +114,7 @@ export function ResumeStep({
             {dragging ? 'Drop resumes to add them' : 'Drag & drop resumes here'}
           </span>
           <span className="text-sm text-muted-foreground">
-            or click to browse — PDF, DOCX, DOC or TXT, up to 10MB each
+            or click to browse — PDF, DOCX, DOC, TXT, or Images, up to 10MB each
           </span>
         </div>
         <input
@@ -165,7 +165,7 @@ export function ResumeStep({
                   className="flex items-center gap-3 rounded-2xl border border-border bg-white/[0.02] p-3"
                 >
                   <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-blue/10 text-blue">
-                    <FileText className="size-5" />
+                    {f.type.startsWith('image/') ? <Image className="size-5" /> : <FileText className="size-5" />}
                   </span>
                   <div className="flex min-w-0 flex-1 flex-col">
                     <span className="truncate text-sm font-medium text-foreground">

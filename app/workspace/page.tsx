@@ -77,6 +77,9 @@ export default function WorkspacePage() {
             setAuthModalMode('update_password')
             setShowAuthModal(true)
             window.history.replaceState({}, '', window.location.pathname)
+          } else {
+            // Auto-show history panel when they land on the page if they're logged in
+            setShowHistoryPanel(true)
           }
         }
       } else {
@@ -113,6 +116,7 @@ export default function WorkspacePage() {
       }
     }
     setShowAuthModal(false)
+    setShowHistoryPanel(true)
   }
 
   const handleSwitchUser = async () => {
@@ -135,6 +139,7 @@ export default function WorkspacePage() {
   const [results,        setResults]        = useState<AnalysisResult[] | null>(null)
   const [analysisError,  setAnalysisError]  = useState<string | null>(null)
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null)
+  const [historyRefreshKey, setHistoryRefreshKey] = useState(0)
 
   const canContinue = useMemo(() => {
     if (current === 0) return job.title.trim() !== '' && job.content.trim().length > 40
@@ -184,6 +189,22 @@ export default function WorkspacePage() {
     }
 
     setResults(newResults)
+
+    // Auto-save the session
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user && profile) {
+      try {
+        const session = await saveSession(user.id, {
+          recruiter_email: profile.email,
+          job_title: job.title,
+          job_content: job.content,
+          results: newResults,
+        })
+        setCurrentSessionId(session.id || '')
+      } catch (err) {
+        console.error("Auto-save error:", err)
+      }
+    }
   }
 
   // ── Save Session ─────────────────────────────────────────────────────────
@@ -202,6 +223,9 @@ export default function WorkspacePage() {
       results:        results,
     })
     setCurrentSessionId(session.id || '')
+    // Refresh history panel so the saved session appears immediately
+    setHistoryRefreshKey(k => k + 1)
+    setShowHistoryPanel(true)
   }
 
   // ── Feedback ─────────────────────────────────────────────────────────────
@@ -395,6 +419,7 @@ export default function WorkspacePage() {
           onClose={() => setShowHistoryPanel(false)}
           profile={profile}
           onRestoreSession={handleRestoreSession}
+          refreshKey={historyRefreshKey}
         />
       )}
     </>

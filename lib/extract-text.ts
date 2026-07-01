@@ -3,7 +3,8 @@ import 'server-only'
 import { fileExtension } from '@/lib/workspace'
 
 /**
- * Extracts plain text from a resume file (PDF, DOCX, DOC, TXT) on the server.
+ * Extracts plain text from a resume file (PDF, DOCX, DOC, TXT, or image) on the server.
+ * For images, uses Gemini Vision to OCR the resume content.
  * Throws a descriptive error when the file can't be read.
  */
 export async function extractResumeText(file: File): Promise<string> {
@@ -71,6 +72,48 @@ export async function extractResumeText(file: File): Promise<string> {
       throw new Error('Could not extract text from this .doc file')
     }
     return cleaned
+  }
+
+  // Image files — use Gemini Vision to OCR and extract text
+  const imageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/heic', 'image/pjpeg']
+  const imageExts = ['.jpg', '.jpeg', '.png', '.webp', '.heic', '.pjpeg']
+  if (imageTypes.includes(file.type) || imageExts.includes(ext)) {
+    const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY
+    if (!apiKey) throw new Error('Gemini API key is required to process image resumes.')
+
+    const base64 = buffer.toString('base64')
+    const mimeType = file.type || 'image/jpeg'
+
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{
+            parts: [
+              {
+                text: 'This is a resume image. Please extract ALL text content from it exactly as it appears, preserving names, companies, dates, skills, education, and contact info. Return ONLY the extracted text, no additional commentary.',
+              },
+              {
+                inline_data: { mime_type: mimeType, data: base64 },
+              },
+            ],
+          }],
+          generationConfig: { temperature: 0, maxOutputTokens: 8192 },
+        }),
+      }
+    )
+
+    if (!response.ok) {
+      const err = await response.text()
+      throw new Error(`Gemini Vision failed to process image resume: ${err.slice(0, 200)}`)
+    }
+
+    const data = await response.json()
+    const text: string = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? ''
+    if (!text) throw new Error('Gemini Vision returned empty text for image resume.')
+    return text
   }
 
   throw new Error(`Unsupported file type: ${file.name}`)
