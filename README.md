@@ -3,6 +3,8 @@
 > **AI-Powered Resume Analysis & Candidate Ranking**  
 > Turning stacks of resumes into a ranked, explainable shortlist in minutes — powered by Google Gemini.
 
+**Built by:** Piyush Markandey & Anish Kumar
+
 ---
 
 ## 🔗 Live Demo
