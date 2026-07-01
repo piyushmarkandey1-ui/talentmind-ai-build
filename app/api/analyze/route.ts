@@ -185,10 +185,10 @@ Return ONLY a raw JSON object. No markdown, no code fences, no explanation. Just
 
 // ── Route handler ─────────────────────────────────────────────────────────────
 export async function POST(req: NextRequest) {
-  const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY
+  const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY
   if (!apiKey) {
     return NextResponse.json(
-      { error: 'GOOGLE_GENERATIVE_AI_API_KEY is not configured on the server.' },
+      { error: 'Neither GEMINI_API_KEY nor GOOGLE_GENERATIVE_AI_API_KEY is configured on the server.' },
       { status: 500 }
     )
   }
