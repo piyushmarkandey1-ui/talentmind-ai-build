@@ -51,6 +51,7 @@ export default function WorkspacePage() {
   const [profile, setProfile]               = useState<RecruiterProfile | null>(null)
   const [profileLoaded, setProfileLoaded]   = useState(false)
   const [showAuthModal, setShowAuthModal] = useState(false)
+  const [authModalMode, setAuthModalMode] = useState<'login' | 'signup' | 'forgot_password' | 'update_password'>('login')
   const [showHistoryPanel, setShowHistoryPanel] = useState(false)
   const [profileMenuOpen, setProfileMenuOpen]   = useState(false)
   const profileMenuRef = useRef<HTMLDivElement>(null)
@@ -58,6 +59,9 @@ export default function WorkspacePage() {
   // Load profile from Supabase on mount
   useEffect(() => {
     async function loadProfile() {
+      const params = new URLSearchParams(window.location.search)
+      const isReset = params.get('reset') === 'true'
+
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
         const saved = await getCachedProfile(user.id)
@@ -69,6 +73,11 @@ export default function WorkspacePage() {
             company: '',
             designation: '',
           })
+          if (isReset) {
+            setAuthModalMode('update_password')
+            setShowAuthModal(true)
+            window.history.replaceState({}, '', window.location.pathname)
+          }
         }
       } else {
         setShowAuthModal(true)
@@ -374,6 +383,7 @@ export default function WorkspacePage() {
         open={showAuthModal}
         onClose={() => setShowAuthModal(false)}
         onSuccess={handleAuthSuccess}
+        initialMode={authModalMode}
       />
       {profile && (
         <HistoryPanel
